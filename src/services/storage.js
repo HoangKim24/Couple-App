@@ -1,28 +1,31 @@
 // Storage & Sync Service
-export const PASSCODE_BOY = "00";
-export const PASSCODE_GIRL = "01";
+export const PASSCODE_1 = "00";
+export const PASSCODE_2 = "01";
+export const PASSCODE_BOY = PASSCODE_1;
+export const PASSCODE_GIRL = PASSCODE_2;
 
-// Default SVG Avatars (Không dùng ảnh người mẫu mạng)
-export const DEFAULT_BOY_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='50' fill='%230284c7'/%3E%3Ctext x='50' y='62' font-size='42' text-anchor='middle' fill='white' font-family='sans-serif'%3E%F0%9F%91%A6%3C/text%3E%3C/svg%3E";
-export const DEFAULT_GIRL_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='50' fill='%23e11d48'/%3E%3Ctext x='50' y='62' font-size='42' text-anchor='middle' fill='white' font-family='sans-serif'%3E%F0%9F%91%A7%3C/text%3E%3C/svg%3E";
+// Default SVG Avatars
+export const DEFAULT_AVATAR_A = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%2338bdf8'/%3E%3Ctext x='50' y='60' font-size='38' text-anchor='middle' fill='white' font-family='sans-serif'%3E%E2%9C%A8%3C/text%3E%3C/svg%3E";
+export const DEFAULT_AVATAR_B = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23f43f5e'/%3E%3Ctext x='50' y='60' font-size='38' text-anchor='middle' fill='white' font-family='sans-serif'%3E%E2%9D%A4%EF%B8%8F%3C/text%3E%3C/svg%3E";
+export const DEFAULT_BOY_AVATAR = DEFAULT_AVATAR_A;
+export const DEFAULT_GIRL_AVATAR = DEFAULT_AVATAR_B;
 
 export const DEFAULT_STATE = {
   unlocked: false,
-  myRole: 'a', // 'a': Bạn Trai, 'b': Bạn Gái
-  anniversaryDate: new Date().getTime(), // Mặc định là ngày hôm nay, người dùng tự đổi
+  myRole: 'a', // 'a': Người dùng 1 (Mã 00), 'b': Người dùng 2 (Mã 01)
+  anniversaryDate: new Date().getTime(),
   userA: {
     id: 'a',
-    name: 'Anh',
-    avatar: DEFAULT_BOY_AVATAR,
+    name: 'Bạn',
+    avatar: DEFAULT_AVATAR_A,
     mood: 'Đang online'
   },
   userB: {
     id: 'b',
-    name: 'Em',
-    avatar: DEFAULT_GIRL_AVATAR,
+    name: 'Người Yêu',
+    avatar: DEFAULT_AVATAR_B,
     mood: 'Đang online'
   },
-  // Chưa có ảnh Locket cứng -> hiển thị trạng thái chờ ảnh đầu tiên
   latestLocket: null
 };
 

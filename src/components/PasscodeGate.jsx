@@ -51,9 +51,9 @@ export default function PasscodeGate({ onUnlock }) {
 
       <h1 className="text-2xl font-bold font-display text-white tracking-tight">Mã Số Bí Mật</h1>
       <p className="text-xs text-slate-400 mt-1.5 mb-6 max-w-[280px]">
-        Nhập mã của bạn để vào app:
+        Nhập mã bí mật để mở khóa app:
         <br />
-        <span className="text-sky-400 font-mono font-bold">00</span> (Con Trai) • <span className="text-love-400 font-mono font-bold">01</span> (Con Gái)
+        <span className="text-sky-400 font-mono font-bold">00</span> hoặc <span className="text-love-400 font-mono font-bold">01</span>
       </p>
 
       <form onSubmit={handleSubmit} className="w-full max-w-[260px] flex flex-col gap-3.5">
@@ -79,9 +79,9 @@ export default function PasscodeGate({ onUnlock }) {
       </form>
 
       <div className="flex items-center gap-4 text-[11px] text-slate-500 mt-6">
-        <span className="flex items-center gap-1">👦 Con Trai: <b className="text-sky-400 font-mono">00</b></span>
+        <span className="flex items-center gap-1">📱 Máy 1: <b className="text-sky-400 font-mono">00</b></span>
         <span>•</span>
-        <span className="flex items-center gap-1">👧 Con Gái: <b className="text-love-400 font-mono">01</b></span>
+        <span className="flex items-center gap-1">📱 Máy 2: <b className="text-love-400 font-mono">01</b></span>
       </div>
       <span className="text-[10px] text-slate-600 mt-2">Chỉ cần nhập 1 lần duy nhất trên máy!</span>
     </div>

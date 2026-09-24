@@ -8,11 +8,13 @@
 
 1. **Khóa Mã Bí Mật 2 Người (No Email / No Password):**
    - Không cần đăng ký email hay mật khẩu rườm rà.
-   - Chỉ cần nhập **Mã bí mật (Passcode)** (Mặc định: `0119111`) và chọn vai trò (*Bạn Trai* hoặc *Bạn Gái*).
+   - 👦 **Bạn Trai (Anh):** Nhập mã `00`
+   - 👧 **Bạn Gái (Em):** Nhập mã `01`
    - Nhập **1 lần duy nhất lúc cài đặt**, sau đó mở app là vào thẳng ngay lập tức trong 0.1 giây.
 2. **Khoảnh Khắc Locket Trung Tâm:**
-   - Chụp ảnh từ camera hoặc chọn ảnh từ máy, gõ dòng caption đè lên ảnh.
+   - Chụp ảnh từ camera WebRTC hoặc chọn ảnh từ thư viện máy, gõ dòng caption đè lên ảnh.
    - Bấm gửi ➔ Màn hình đối phương đổi ảnh ngay tức thì!
+   - Xem cuộn phim kỷ niệm (Moments Roll), Story toàn màn hình, tải ảnh về máy.
 3. **Thanh Cảm Xúc Habi 1-Chạm:**
    - 💋 **Gửi Nụ Hôn:** Vệt son môi và nụ hôn nổ bung màn hình đối phương.
    - ❤️ **Nhớ Bạn:** Mưa bong bóng trái tim rơi ngập tràn màn hình.
@@ -21,18 +23,22 @@
 4. **Bộ Đếm Ngày Yêu Nhau (Love Counter):**
    - Đếm số ngày, giờ, phút yêu nhau sống động theo thời gian thực.
 5. **Hỗ Trợ Widget 4x4 Màn Hình Chính iOS:**
-   - Có sẵn file mã nguồn `scriptable-widget.js` để tích hợp vào ứng dụng miễn phí **Scriptable** trên iPhone.
+   - Có sẵn file mã nguồn [`scriptable-widget.js`](./scriptable-widget.js) để tích hợp vào ứng dụng miễn phí **Scriptable** trên iPhone.
 
 ---
 
-## 📱 Cách Kiểm Thử UI/UX Trực Tiếp
+## 📖 Hướng Dẫn Cài Đặt & Đăng Ký Database
+👉 **Xem hướng dẫn chi tiết từng bước tại:** [`HUONG_DAN_DATABASE_VA_TEST.md`](./HUONG_DAN_DATABASE_VA_TEST.md)
+- Giải đáp database lưu ở đâu (IndexedDB + Firebase Cloud).
+- Hướng dẫn tạo Firebase Firestore miễn phí 100% trọn đời trong 2 phút.
+- Hướng dẫn test 2 máy song song cực nhanh chỉ với 1 file [`may_a.html`](./may_a.html).
 
-Dự án có sẵn file **`test_ui_preview.html`** mô phỏng hoàn hảo môi trường iOS:
-- **Chế độ 2 máy song song (Dual Sync):** Đặt điện thoại của Bạn và Người yêu cạnh nhau trên cùng màn hình. Bên này bấm gửi ảnh hoặc thả icon bực bội, bên kia đổi ảnh và nổ hiệu ứng rung chuông ngay trước mắt!
-- **Chế độ Widget 4x4:** Xem trước widget hiển thị trên màn hình chính iPhone.
+---
 
-### Mở bằng trình duyệt:
-Chỉ cần nhấp đúp mở file `test_ui_preview.html` trong bất kỳ trình duyệt nào (Chrome, Safari, Edge) là có thể trải nghiệm ngay lập tức mà không cần cài đặt thêm gì.
+## 📱 Cách Kiểm Thử 2 Máy Song Song Bằng `may_a.html`
+1. Mở file [`may_a.html`](./may_a.html) trong trình duyệt ➔ Nhập mã `00` (Bạn Trai).
+2. Bấm nút **"Mở Tab Em (01)"** ở thanh trên cùng để mở thêm 1 tab Bạn Gái.
+3. Đặt 2 cửa sổ cạnh nhau và trải nghiệm gửi ảnh Locket & thả cảm xúc Habi tức thì!
 
 ---
 

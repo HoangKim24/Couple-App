@@ -10,12 +10,24 @@ import { getFirestore, doc, setDoc, onSnapshot } from 'firebase/firestore';
 const LOCAL_CHANNEL_NAME = 'couple_app_live_sync';
 const broadcast = new BroadcastChannel(LOCAL_CHANNEL_NAME);
 
-// Lấy config Firebase từ localStorage hoặc dùng mặc định
+// Lấy config Firebase từ localStorage hoặc file .env
 export function getFirebaseConfig() {
   try {
     const saved = localStorage.getItem('couple_firebase_config');
     if (saved) return JSON.parse(saved);
   } catch (e) {}
+
+  // Đọc từ biến môi trường .env nếu có
+  if (import.meta.env.VITE_FIREBASE_API_KEY) {
+    return {
+      apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+      authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+      projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+      storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+      messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+      appId: import.meta.env.VITE_FIREBASE_APP_ID
+    };
+  }
   return null;
 }
 

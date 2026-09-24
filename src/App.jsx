@@ -100,7 +100,7 @@ export default function App() {
       unlocked: true,
       myRole: role
     }));
-    showToast(`Mở khóa thành công! Chào mừng ${role === 'a' ? 'Bạn Trai' : 'Bạn Gái'} 💕`);
+    showToast('Mở khóa thành công! Chào mừng bạn 💕');
   };
 
   const handleLocketSubmit = async ({ photoUrl, caption }) => {

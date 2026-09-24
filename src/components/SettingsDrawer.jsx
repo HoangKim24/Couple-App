@@ -110,12 +110,12 @@ export default function SettingsDrawer({ isOpen, onClose, state, onSaveSettings 
           <span className="text-[10px] text-slate-500">Đồng hồ sẽ đếm chính xác số ngày yêu từ mốc này.</span>
         </div>
 
-        {/* Thông Tin Bạn Trai */}
+        {/* Thông Tin Người Dùng 1 */}
         <div className="bg-slate-950 p-3 rounded-2xl border border-slate-800 flex flex-col gap-2">
-          <span className="text-[11px] font-bold text-sky-400">👦 Thông Tin Bạn Trai (Mã 00)</span>
+          <span className="text-[11px] font-bold text-sky-400">👤 Người Dùng 1 (Mã 00)</span>
           <div className="flex items-center gap-3">
             <div className="relative group cursor-pointer" onClick={() => fileInputARef.current?.click()}>
-              <img src={avatarA} alt="Avatar Boy" className="w-12 h-12 rounded-full object-cover border-2 border-sky-400 shadow-md" />
+              <img src={avatarA} alt="Avatar 1" className="w-12 h-12 rounded-full object-cover border-2 border-sky-400 shadow-md" />
               <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
                 <Upload className="w-4 h-4 text-white" />
               </div>
@@ -134,7 +134,7 @@ export default function SettingsDrawer({ isOpen, onClose, state, onSaveSettings 
                 onClick={() => fileInputARef.current?.click()}
                 className="text-[10px] text-sky-400 text-left hover:underline"
               >
-                Đổi ảnh đại diện thật...
+                Đổi ảnh đại diện...
               </button>
             </div>
             <input
@@ -147,12 +147,12 @@ export default function SettingsDrawer({ isOpen, onClose, state, onSaveSettings 
           </div>
         </div>
 
-        {/* Thông Tin Bạn Gái */}
+        {/* Thông Tin Người Dùng 2 */}
         <div className="bg-slate-950 p-3 rounded-2xl border border-slate-800 flex flex-col gap-2">
-          <span className="text-[11px] font-bold text-love-400">👧 Thông Tin Bạn Gái (Mã 01)</span>
+          <span className="text-[11px] font-bold text-love-400">👤 Người Dùng 2 (Mã 01)</span>
           <div className="flex items-center gap-3">
             <div className="relative group cursor-pointer" onClick={() => fileInputBRef.current?.click()}>
-              <img src={avatarB} alt="Avatar Girl" className="w-12 h-12 rounded-full object-cover border-2 border-love-400 shadow-md" />
+              <img src={avatarB} alt="Avatar 2" className="w-12 h-12 rounded-full object-cover border-2 border-love-400 shadow-md" />
               <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
                 <Upload className="w-4 h-4 text-white" />
               </div>
@@ -171,7 +171,7 @@ export default function SettingsDrawer({ isOpen, onClose, state, onSaveSettings 
                 onClick={() => fileInputBRef.current?.click()}
                 className="text-[10px] text-love-400 text-left hover:underline"
               >
-                Đổi ảnh đại diện thật...
+                Đổi ảnh đại diện...
               </button>
             </div>
             <input
