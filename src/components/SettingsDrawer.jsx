@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react';
-import { X, User, Calendar, Save, RotateCcw, Upload, Check } from 'lucide-react';
+import { X, User, Calendar, Save, Upload, Check, Cloud, Database, ExternalLink } from 'lucide-react';
 import { sound } from '../services/audio';
 import { compressImage } from '../services/compressor';
+import { getFirebaseConfig, saveFirebaseConfig } from '../services/firebase';
 
 export default function SettingsDrawer({ isOpen, onClose, state, onSaveSettings }) {
   const [nameA, setNameA] = useState(state.userA?.name || 'Anh');
@@ -15,6 +16,13 @@ export default function SettingsDrawer({ isOpen, onClose, state, onSaveSettings 
     : '2024-04-20';
   const [anniversary, setAnniversary] = useState(initialDateStr);
   const [savedSuccess, setSavedSuccess] = useState(false);
+
+  // Firebase Config State
+  const [showCloudConfig, setShowCloudConfig] = useState(false);
+  const currentConfig = getFirebaseConfig();
+  const [rawConfigInput, setRawConfigInput] = useState(
+    currentConfig ? JSON.stringify(currentConfig, null, 2) : ''
+  );
 
   const fileInputARef = useRef(null);
   const fileInputBRef = useRef(null);
@@ -35,6 +43,18 @@ export default function SettingsDrawer({ isOpen, onClose, state, onSaveSettings 
 
   const handleSave = () => {
     sound.play('heart');
+
+    // Lưu Firebase config nếu có nhập
+    if (rawConfigInput.trim()) {
+      try {
+        const parsed = JSON.parse(rawConfigInput);
+        saveFirebaseConfig(parsed);
+      } catch (e) {
+        alert('Cấu hình Firebase phải là định dạng JSON hợp lệ!');
+        return;
+      }
+    }
+
     const updated = {
       userA: {
         ...state.userA,
@@ -162,6 +182,46 @@ export default function SettingsDrawer({ isOpen, onClose, state, onSaveSettings 
               onChange={(e) => handleAvatarUpload(e.target.files?.[0], 'b')}
             />
           </div>
+        </div>
+
+        {/* Cloud Firebase Realtime Sync Config */}
+        <div className="bg-slate-950 p-3 rounded-2xl border border-slate-800 flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold text-slate-300 flex items-center gap-1.5">
+              <Cloud className="w-3.5 h-3.5 text-love-400" />
+              Kết Nối Cloud Firebase (0 VNĐ)
+            </span>
+            <button
+              type="button"
+              onClick={() => setShowCloudConfig(!showCloudConfig)}
+              className="text-[10px] text-love-400 font-semibold"
+            >
+              {showCloudConfig ? 'Thu gọn' : currentConfig ? '🟢 Đã kết nối' : '⚙️ Cấu hình'}
+            </button>
+          </div>
+
+          <div className="text-[10px] text-slate-400 leading-tight">
+            {currentConfig ? (
+              <span className="text-emerald-400 font-medium">✓ Đang đồng bộ Real-time qua Google Cloud Firestore.</span>
+            ) : (
+              <span>Đang ở chế độ Local (Offline). Nhập Firebase Config để 2 máy dùng 4G từ xa!</span>
+            )}
+          </div>
+
+          {showCloudConfig && (
+            <div className="flex flex-col gap-2 mt-1 pt-2 border-t border-slate-800">
+              <p className="text-[9px] text-slate-400">
+                Vào <a href="https://console.firebase.google.com" target="_blank" rel="noreferrer" className="text-love-400 underline">Firebase Console</a> tạo project free (2 phút) rồi dán đoạn config JSON vào đây:
+              </p>
+              <textarea
+                rows={4}
+                value={rawConfigInput}
+                onChange={(e) => setRawConfigInput(e.target.value)}
+                placeholder='{"apiKey": "...", "projectId": "...", ...}'
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl p-2 text-[10px] font-mono text-slate-200 focus:outline-none focus:border-love-500"
+              />
+            </div>
+          )}
         </div>
 
         {/* Save Button */}

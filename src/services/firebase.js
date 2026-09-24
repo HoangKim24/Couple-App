@@ -1,44 +1,139 @@
+import { initializeApp, getApps, getApp } from 'firebase/app';
+import { getFirestore, doc, setDoc, onSnapshot } from 'firebase/firestore';
+
 /**
  * FIREBASE REALTIME SYNC SERVICE
- * Dành cho việc kết nối 2 chiếc điện thoại thật qua Internet (0 VNĐ).
- * 
- * Hướng dẫn lấy config Firebase (Chỉ mất 2 phút):
- * 1. Vào https://console.firebase.google.com (miễn phí của Google).
- * 2. Bấm "Add Project" -> Đặt tên "Couple-App" -> Tắt Google Analytics.
- * 3. Bấm vào biểu tượng Web </> để tạo Web App -> Copy đoạn firebaseConfig dán vào bên dưới.
- * 4. Vào mục "Firestore Database" hoặc "Realtime Database" -> Bấm Create Database -> Chọn Test Mode.
+ * Hỗ trợ đồng bộ 2 máy từ xa qua Firestore Realtime (0 VNĐ).
+ * Tự động fallback sang BroadcastChannel khi chưa có config Firebase.
  */
 
-// Đổi đoạn này thành config Firebase của bạn khi đưa lên online:
-export const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyDemo-FreeTier-ForCoupleApp",
-  authDomain: "couple-app-love.firebaseapp.com",
-  projectId: "couple-app-love",
-  storageBucket: "couple-app-love.appspot.com",
-  messagingSenderId: "1234567890",
-  appId: "1:1234567890:web:abcdef123456"
-};
+const LOCAL_CHANNEL_NAME = 'couple_app_live_sync';
+const broadcast = new BroadcastChannel(LOCAL_CHANNEL_NAME);
 
-// Kênh BroadcastChannel kết nối tức thì khi mở song song
-const broadcast = new BroadcastChannel('couple_app_live_sync');
+// Lấy config Firebase từ localStorage hoặc dùng mặc định
+export function getFirebaseConfig() {
+  try {
+    const saved = localStorage.getItem('couple_firebase_config');
+    if (saved) return JSON.parse(saved);
+  } catch (e) {}
+  return null;
+}
 
-export function publishLiveEvent(event) {
-  // Gửi qua BroadcastChannel
-  broadcast.postMessage(event);
-
-  // Lưu vào localStorage
-  if (event.type === 'LOCKET') {
-    localStorage.setItem('couple_cloud_latest_locket', JSON.stringify(event.payload));
+export function saveFirebaseConfig(config) {
+  if (config) {
+    localStorage.setItem('couple_firebase_config', JSON.stringify(config));
+  } else {
+    localStorage.removeItem('couple_firebase_config');
   }
 }
 
+let firestoreInstance = null;
+
+function getDb() {
+  if (firestoreInstance) return firestoreInstance;
+  const config = getFirebaseConfig();
+  if (config && config.projectId) {
+    try {
+      const app = getApps().length === 0 ? initializeApp(config) : getApp();
+      firestoreInstance = getFirestore(app);
+      return firestoreInstance;
+    } catch (err) {
+      console.warn('Lỗi khởi tạo Firebase:', err);
+    }
+  }
+  return null;
+}
+
+/**
+ * Gửi sự kiện Live (Ảnh Locket, Cảm xúc Habi, Cài đặt)
+ */
+export async function publishLiveEvent(event) {
+  // 1. Luôn phát sóng qua BroadcastChannel nội bộ
+  try {
+    broadcast.postMessage(event);
+  } catch (e) {}
+
+  // 2. Nếu có Firebase Cloud, ghi trực tiếp lên Firestore
+  const db = getDb();
+  if (db) {
+    try {
+      const coupleRef = doc(db, 'couples', '00_01');
+      if (event.type === 'LOCKET') {
+        await setDoc(coupleRef, { latestLocket: event.payload, updatedAt: Date.now() }, { merge: true });
+      } else if (event.type === 'HABI') {
+        await setDoc(coupleRef, {
+          lastHabi: {
+            from: event.from,
+            reaction: event.reaction,
+            timestamp: Date.now()
+          }
+        }, { merge: true });
+      } else if (event.type === 'SETTINGS') {
+        await setDoc(coupleRef, { ...event.payload, updatedAt: Date.now() }, { merge: true });
+      } else if (event.type === 'REACTION') {
+        await setDoc(coupleRef, {
+          lastReaction: {
+            from: event.from,
+            emoji: event.emoji,
+            timestamp: Date.now()
+          }
+        }, { merge: true });
+      }
+    } catch (err) {
+      console.error('Lỗi gửi dữ liệu lên Firestore:', err);
+    }
+  }
+}
+
+/**
+ * Lắng nghe sự kiện Live từ đối phương
+ */
 export function subscribeLiveEvents(callback) {
-  const handler = (e) => {
+  // 1. Lắng nghe qua BroadcastChannel nội bộ
+  const broadcastHandler = (e) => {
     if (e.data) callback(e.data);
   };
-  broadcast.addEventListener('message', handler);
+  broadcast.addEventListener('message', broadcastHandler);
+
+  // 2. Lắng nghe qua Firestore Realtime onSnapshot nếu có kết nối Cloud
+  let unsubscribeFirestore = null;
+  const db = getDb();
+  if (db) {
+    try {
+      const coupleRef = doc(db, 'couples', '00_01');
+      unsubscribeFirestore = onSnapshot(coupleRef, (snapshot) => {
+        if (snapshot.exists()) {
+          const data = snapshot.data();
+          if (data.latestLocket) {
+            callback({ type: 'LOCKET', payload: data.latestLocket });
+          }
+          if (data.lastHabi && Date.now() - data.lastHabi.timestamp < 10000) {
+            callback({ type: 'HABI', from: data.lastHabi.from, reaction: data.lastHabi.reaction });
+          }
+          if (data.lastReaction && Date.now() - data.lastReaction.timestamp < 10000) {
+            callback({ type: 'REACTION', from: data.lastReaction.from, emoji: data.lastReaction.emoji });
+          }
+          if (data.anniversaryDate || data.userA || data.userB) {
+            callback({
+              type: 'SETTINGS',
+              payload: {
+                userA: data.userA,
+                userB: data.userB,
+                anniversaryDate: data.anniversaryDate
+              }
+            });
+          }
+        }
+      }, (error) => {
+        console.warn('Lỗi lắng nghe Firestore:', error);
+      });
+    } catch (e) {
+      console.warn('Không thể đăng ký onSnapshot:', e);
+    }
+  }
 
   return () => {
-    broadcast.removeEventListener('message', handler);
+    broadcast.removeEventListener('message', broadcastHandler);
+    if (unsubscribeFirestore) unsubscribeFirestore();
   };
 }
