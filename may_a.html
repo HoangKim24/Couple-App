@@ -153,7 +153,7 @@
         <!-- User Info (Me: Bạn Trai) -->
         <div class="flex items-center gap-2">
           <div class="relative">
-            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=400&auto=format&fit=crop" class="w-9 h-9 rounded-full object-cover border-2 border-sky-400">
+            <div class="w-9 h-9 rounded-full bg-sky-600 flex items-center justify-center text-white text-base border-2 border-sky-400">👦</div>
             <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full ring-2 ring-slate-950"></span>
           </div>
           <div>
@@ -166,7 +166,7 @@
         <div class="flex flex-col items-center">
           <div class="flex items-center gap-1 text-love-500 font-extrabold text-sm font-display">
             <i data-lucide="heart" class="w-3.5 h-3.5 fill-love-500 animate-heart-beat"></i>
-            <span id="days-in-love">520</span>
+            <span id="days-in-love">0</span>
             <span class="text-[11px] font-medium text-slate-300">Ngày</span>
           </div>
           <span class="text-[9px] text-love-300/70 font-mono tracking-wider">YÊU NHAU</span>
@@ -176,23 +176,33 @@
         <div class="flex items-center gap-2 text-right">
           <div>
             <span class="text-xs font-bold text-white block leading-tight">Người Yêu (Em)</span>
-            <span id="partner-mood-badge" class="text-[10px] text-love-400 font-medium block truncate max-w-[75px]">Đang nhớ anh</span>
+            <span id="partner-mood-badge" class="text-[10px] text-love-400 font-medium block truncate max-w-[75px]">Đang online</span>
           </div>
           <div class="relative">
-            <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=400&auto=format&fit=crop" class="w-9 h-9 rounded-full object-cover border-2 border-love-500">
+            <div class="w-9 h-9 rounded-full bg-rose-600 flex items-center justify-center text-white text-base border-2 border-love-500">👧</div>
             <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-love-500 rounded-full ring-2 ring-slate-950 animate-ping"></span>
           </div>
         </div>
       </header>
 
       <!-- CENTER: LOCKET MAIN PHOTO WIDGET -->
-      <div class="relative w-full aspect-square my-auto bg-slate-950 rounded-[32px] overflow-hidden border border-slate-800 shadow-2xl flex flex-col justify-end group">
-        <img id="locket-photo" src="https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?q=80&w=800&auto=format&fit=crop" class="absolute inset-0 w-full h-full object-cover select-none transition-all duration-500">
+      <div id="locket-container" class="relative w-full aspect-square my-auto bg-slate-950 rounded-[32px] overflow-hidden border border-slate-800 shadow-2xl flex flex-col justify-end group cursor-pointer" onclick="openLocketModal()">
+        <img id="locket-photo" src="" class="hidden absolute inset-0 w-full h-full object-cover select-none transition-all duration-500">
         
-        <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/35 pointer-events-none"></div>
+        <!-- Empty State khi chưa có ảnh -->
+        <div id="locket-empty-state" class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+          <div class="w-16 h-16 rounded-3xl bg-sky-500/10 text-sky-400 border border-sky-500/20 flex items-center justify-center mb-3 group-hover:scale-110 transition shadow-lg">
+            <i data-lucide="camera" class="w-8 h-8 text-sky-400"></i>
+          </div>
+          <h3 class="text-sm font-bold text-white font-display">Chưa Có Khoảnh Khắc Nào</h3>
+          <p class="text-xs text-slate-400 mt-1 max-w-[220px]">Chạm vào đây hoặc bấm nút bên dưới để chụp và gửi ảnh Locket đầu tiên!</p>
+          <span class="mt-4 px-4 py-1.5 rounded-full bg-sky-600/30 text-sky-300 border border-sky-500/30 text-[11px] font-semibold">📸 Chụp Ảnh Ngay</span>
+        </div>
+
+        <div id="locket-overlay" class="hidden absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/35 pointer-events-none"></div>
 
         <!-- Top photo status badge -->
-        <div class="absolute top-3.5 inset-x-3.5 flex items-center justify-between pointer-events-none">
+        <div id="locket-header-badges" class="hidden absolute top-3.5 inset-x-3.5 flex items-center justify-between pointer-events-none">
           <span id="locket-sender-tag" class="px-2.5 py-1 rounded-full bg-black/50 backdrop-blur-md text-white text-[11px] font-semibold border border-white/10 flex items-center gap-1.5">
             <span class="w-2 h-2 rounded-full bg-love-500"></span>
             Em vừa gửi
@@ -203,9 +213,9 @@
         </div>
 
         <!-- Caption on photo -->
-        <div class="relative z-10 p-4 flex flex-col items-center gap-2">
+        <div id="locket-caption-box" class="hidden relative z-10 p-4 flex flex-col items-center gap-2">
           <div id="locket-caption" class="bg-black/60 backdrop-blur-md text-white font-medium text-xs sm:text-sm px-4 py-2 rounded-2xl border border-white/20 text-center max-w-[95%] shadow-lg">
-            "Em vừa tan ca nè, nhớ anh quáaa 🥺"
+            ""
           </div>
 
           <!-- Quick Reactions directly on photo -->
@@ -272,51 +282,87 @@
     </div>
   </div>
 
-  <!-- LOCKET MODAL (CAMERA & CAPTION) -->
-  <div id="locket-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
-    <div class="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-3xl p-4 shadow-2xl flex flex-col gap-3">
-      <div class="flex items-center justify-between">
-        <span class="text-sm font-bold text-white flex items-center gap-1.5">
-          <i data-lucide="camera" class="w-4 h-4 text-sky-400"></i>
-          Gửi Ảnh Locket Cho Em
-        </span>
-        <button onclick="closeLocketModal()" class="w-7 h-7 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center">
-          <i data-lucide="x" class="w-3.5 h-3.5"></i>
-        </button>
+  <!-- LOCKET CAMERA FULLSCREEN EXPERIENCE (CHUẨN 100% LOCKET) -->
+  <div id="locket-modal" class="fixed inset-0 bg-black z-50 hidden flex flex-col justify-between items-center select-none overflow-hidden p-4 sm:p-6">
+    <!-- Camera Flash Screen Effect -->
+    <div id="camera-flash" class="hidden absolute inset-0 bg-white z-[80] pointer-events-none transition-opacity duration-150"></div>
+
+    <!-- Top Bar: Close, Target Recipient, Flip -->
+    <div class="w-full max-w-sm flex items-center justify-between z-10 pt-2">
+      <button onclick="closeLocketModal()" class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md text-white border border-white/15 flex items-center justify-center active:scale-90 transition">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <div class="px-3.5 py-1.5 rounded-full bg-white/10 border border-white/15 backdrop-blur-md flex items-center gap-1.5 text-xs font-bold text-amber-300 font-display tracking-wide">
+        <span>💛 Gửi đến Bạn Gái (Em)</span>
       </div>
 
-      <!-- Preview Image -->
-      <div class="relative w-full aspect-square bg-slate-950 rounded-2xl overflow-hidden border border-slate-800">
-        <img id="upload-preview" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=800&auto=format&fit=crop" class="w-full h-full object-cover">
-        
-        <div class="absolute bottom-3 inset-x-3 flex justify-center">
-          <div id="caption-preview-tag" class="bg-black/60 backdrop-blur-md text-white text-xs font-medium px-3 py-1.5 rounded-full border border-white/20 max-w-[90%] text-center truncate">
-            Anh vừa tan ca nè, chuẩn bị qua đón em... 🛵
-          </div>
+      <button onclick="toggleFlipCamera()" class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md text-white border border-white/15 flex items-center justify-center active:scale-90 transition">
+        <i data-lucide="refresh-cw" class="w-5 h-5"></i>
+      </button>
+    </div>
+
+    <!-- Center 1:1 Square Viewfinder -->
+    <div class="relative w-full max-w-sm aspect-square bg-slate-950 rounded-[40px] overflow-hidden border-2 border-white/20 shadow-2xl flex items-center justify-center my-auto">
+      <!-- Live WebRTC Stream -->
+      <video id="camera-stream" autoplay playsinline muted class="w-full h-full object-cover transition-transform duration-300"></video>
+      
+      <!-- Captured Photo Preview -->
+      <img id="camera-captured-img" src="" class="hidden w-full h-full object-cover select-none">
+
+      <!-- Fallback Error View if WebRTC blocked -->
+      <div id="camera-error-box" class="hidden absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-slate-950/90 gap-3">
+        <div class="w-14 h-14 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center mb-1">
+          <i data-lucide="camera" class="w-7 h-7"></i>
         </div>
+        <p class="text-xs text-slate-300">Nhấn nút bên dưới để mở camera thiết bị hoặc chọn ảnh từ thư viện</p>
+        <label class="px-5 py-2.5 rounded-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs cursor-pointer shadow-lg active:scale-95 transition flex items-center gap-1.5">
+          <i data-lucide="camera" class="w-4 h-4"></i>
+          <span>Mở Camera Điện Thoại</span>
+          <input type="file" accept="image/*" capture="user" class="hidden" onchange="handleNativeCamera(event)">
+        </label>
       </div>
 
-      <!-- Quick sample photos or upload -->
-      <div class="flex items-center gap-2">
-        <label class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium py-2.5 rounded-xl border border-slate-700 flex items-center justify-center gap-1.5 cursor-pointer transition">
-          <i data-lucide="upload" class="w-3.5 h-3.5 text-sky-400"></i>
-          <span>Tải Ảnh Lên</span>
-          <input type="file" accept="image/*" class="hidden" onchange="handleFile(event)">
+      <!-- Locket Floating Caption Input (Inside frame at bottom) -->
+      <div class="absolute bottom-4 inset-x-4 flex justify-center z-20">
+        <input id="locket-caption-input" type="text" maxlength="60"
+               placeholder="Gửi một tin nhắn... 💬"
+               class="w-full bg-black/60 backdrop-blur-md text-white text-xs sm:text-sm font-medium px-4 py-2.5 rounded-full border border-white/25 text-center placeholder-white/60 focus:outline-none focus:border-amber-400 shadow-lg tracking-wide">
+      </div>
+    </div>
+
+    <!-- Bottom Controls: Gallery, Shutter/Send, Retake/Flip -->
+    <div class="w-full max-w-sm px-6 pb-4 flex items-center justify-between z-10">
+      <!-- Gallery Picker -->
+      <div id="container-gallery">
+        <label class="w-12 h-12 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 text-white flex items-center justify-center cursor-pointer active:scale-90 transition shadow-md">
+          <i data-lucide="image" class="w-5 h-5 text-amber-300"></i>
+          <input type="file" accept="image/*" class="hidden" onchange="handleGalleryPick(event)">
         </label>
-        <button onclick="cycleSample()" class="px-3 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-xl border border-slate-700 transition">
-          Đổi Ảnh Mẫu
+      </div>
+
+      <!-- Retake Button (Shown when photo captured) -->
+      <button id="btn-retake" onclick="retakePhoto()" class="hidden w-12 h-12 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 text-slate-300 hover:text-white flex items-center justify-center active:scale-90 transition shadow-md">
+        <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
+      </button>
+
+      <!-- Center: Locket Double Shutter Ring OR Gold Send Button -->
+      <div class="flex items-center justify-center">
+        <!-- Iconic Locket Double Concentric Shutter Button -->
+        <button id="btn-shutter" onclick="takePhoto()" class="w-20 h-20 rounded-full border-4 border-white p-1 flex items-center justify-center active:scale-90 transition shadow-2xl hover:scale-105">
+          <div class="w-full h-full bg-white rounded-full transition-transform active:scale-90"></div>
+        </button>
+
+        <!-- Locket Gold Send Button (When captured) -->
+        <button id="btn-send" onclick="sendLocketToPartner()" class="hidden flex items-center gap-2 bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-slate-950 font-extrabold px-8 py-4 rounded-full shadow-2xl shadow-amber-400/50 active:scale-95 transition-all text-sm animate-pulse">
+          <i data-lucide="send" class="w-5 h-5 fill-slate-950"></i>
+          <span>Gửi Locket ✨</span>
         </button>
       </div>
 
-      <!-- Caption Input -->
-      <input id="caption-input" type="text" maxlength="60" placeholder="Viết một dòng caption ngắn cho em..."
-             value="Anh vừa tan ca nè, chuẩn bị qua đón em... 🛵"
-             oninput="document.getElementById('caption-preview-tag').innerText = this.value.trim() || 'Nhớ em quá nè... 💕'"
-             class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-400">
-
-      <button onclick="sendLocketToPartner()" class="w-full bg-gradient-to-r from-sky-500 to-love-600 hover:from-sky-400 hover:to-love-500 text-white font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-xs">
-        <i data-lucide="send" class="w-4 h-4"></i>
-        <span>Gửi Lập Tức Cho Máy Em ✨</span>
+      <!-- Quick Camera Flip Button -->
+      <button id="btn-flip" onclick="toggleFlipCamera()" class="w-12 h-12 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 text-white flex items-center justify-center active:scale-90 transition shadow-md">
+        <i data-lucide="refresh-cw" class="w-5 h-5"></i>
       </button>
     </div>
   </div>
@@ -333,11 +379,10 @@
     const SECRET_PASSCODE = '00';
     const ANNIVERSARY = new Date("2024-04-20T00:00:00");
 
-    const SAMPLE_IMAGES = [
-      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=800&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1518495973542-4542c06a5843?q=80&w=800&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=800&auto=format&fit=crop'
-    ];
+    // Camera WebRTC State
+    let currentStream = null;
+    let currentFacingMode = 'user'; // 'user' (selfie) hoặc 'environment' (sau)
+    let capturedDataUrl = null;
 
     // BroadcastChannel for instant inter-tab real-time communication
     const channel = new BroadcastChannel('couple_live_channel');
@@ -404,36 +449,185 @@
       }
     }
 
-    // Locket Actions
-    function openLocketModal() {
+    // Locket Camera Actions
+    async function openLocketModal() {
       document.getElementById('locket-modal').classList.remove('hidden');
-    }
-    function closeLocketModal() {
-      document.getElementById('locket-modal').classList.add('hidden');
+      document.getElementById('locket-modal').classList.add('flex');
+      lucide.createIcons();
+      await startCamera();
     }
 
-    function handleFile(e) {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function(evt) {
-          document.getElementById('upload-preview').src = evt.target.result;
-        };
-        reader.readAsDataURL(file);
+    function closeLocketModal() {
+      stopCamera();
+      document.getElementById('locket-modal').classList.add('hidden');
+      document.getElementById('locket-modal').classList.remove('flex');
+    }
+
+    async function startCamera() {
+      stopCamera();
+      capturedDataUrl = null;
+
+      const video = document.getElementById('camera-stream');
+      const errorBox = document.getElementById('camera-error-box');
+      const previewImg = document.getElementById('camera-captured-img');
+
+      previewImg.classList.add('hidden');
+      previewImg.src = '';
+      document.getElementById('btn-shutter').classList.remove('hidden');
+      document.getElementById('btn-send').classList.add('hidden');
+      document.getElementById('btn-retake').classList.add('hidden');
+      document.getElementById('container-gallery').classList.remove('hidden');
+      document.getElementById('btn-flip').classList.remove('hidden');
+
+      try {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          throw new Error('WebRTC camera not supported');
+        }
+
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: currentFacingMode,
+            width: { ideal: 1080 },
+            height: { ideal: 1080 }
+          },
+          audio: false
+        });
+
+        currentStream = stream;
+        video.srcObject = stream;
+        video.classList.remove('hidden');
+        errorBox.classList.add('hidden');
+
+        if (currentFacingMode === 'user') {
+          video.style.transform = 'scaleX(-1)';
+        } else {
+          video.style.transform = 'scaleX(1)';
+        }
+
+        await video.play();
+      } catch (err) {
+        console.warn('Camera error:', err);
+        video.classList.add('hidden');
+        errorBox.classList.remove('hidden');
       }
     }
 
-    function cycleSample() {
-      const random = SAMPLE_IMAGES[Math.floor(Math.random() * SAMPLE_IMAGES.length)];
-      document.getElementById('upload-preview').src = random;
+    function stopCamera() {
+      if (currentStream) {
+        currentStream.getTracks().forEach((t) => t.stop());
+        currentStream = null;
+      }
+    }
+
+    function toggleFlipCamera() {
+      playSfx('tap');
+      currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+      startCamera();
+    }
+
+    // Bấm nút Shutter tròn Locket
+    function takePhoto() {
+      const video = document.getElementById('camera-stream');
+      if (!video || video.videoWidth === 0) return;
+
+      playSfx('tap');
+
+      // Chớp flash trắng
+      const flash = document.getElementById('camera-flash');
+      flash.classList.remove('hidden');
+      setTimeout(() => flash.classList.add('hidden'), 160);
+
+      const canvas = document.createElement('canvas');
+      const size = Math.min(video.videoWidth, video.videoHeight);
+      const outSize = 1080;
+      canvas.width = outSize;
+      canvas.height = outSize;
+      const ctx = canvas.getContext('2d');
+
+      const startX = (video.videoWidth - size) / 2;
+      const startY = (video.videoHeight - size) / 2;
+
+      if (currentFacingMode === 'user') {
+        ctx.translate(outSize, 0);
+        ctx.scale(-1, 1);
+      }
+
+      ctx.drawImage(video, startX, startY, size, size, 0, 0, outSize, outSize);
+      capturedDataUrl = canvas.toDataURL('image/jpeg', 0.84);
+
+      showCapturedPreview(capturedDataUrl);
+      stopCamera();
+    }
+
+    function showCapturedPreview(dataUrl) {
+      capturedDataUrl = dataUrl;
+      const video = document.getElementById('camera-stream');
+      const previewImg = document.getElementById('camera-captured-img');
+
+      video.classList.add('hidden');
+      previewImg.src = dataUrl;
+      previewImg.classList.remove('hidden');
+
+      document.getElementById('btn-shutter').classList.add('hidden');
+      document.getElementById('btn-send').classList.remove('hidden');
+      document.getElementById('btn-retake').classList.remove('hidden');
+      document.getElementById('container-gallery').classList.add('hidden');
+      document.getElementById('btn-flip').classList.add('hidden');
+      lucide.createIcons();
+    }
+
+    function retakePhoto() {
+      playSfx('tap');
+      startCamera();
+    }
+
+    // Chọn ảnh từ thư viện
+    function handleGalleryPick(e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      compressAndPreview(file);
+    }
+
+    // Camera gốc fallback
+    function handleNativeCamera(e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      compressAndPreview(file);
+    }
+
+    function compressAndPreview(file) {
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          const outSize = 1080;
+          const size = Math.min(img.width, img.height);
+          canvas.width = outSize;
+          canvas.height = outSize;
+          const ctx = canvas.getContext('2d');
+          const startX = (img.width - size) / 2;
+          const startY = (img.height - size) / 2;
+
+          ctx.drawImage(img, startX, startY, size, size, 0, 0, outSize, outSize);
+          const compressed = canvas.toDataURL('image/jpeg', 0.84);
+          showCapturedPreview(compressed);
+          stopCamera();
+        };
+        img.src = evt.target.result;
+      };
+      reader.readAsDataURL(file);
     }
 
     function sendLocketToPartner() {
-      const photo = document.getElementById('upload-preview').src;
-      const caption = document.getElementById('caption-input').value.trim() || 'Khoảnh khắc của chúng mình 💕';
+      if (!capturedDataUrl) {
+        showToast('Vui lòng chụp một bức ảnh trước!');
+        return;
+      }
+      const caption = document.getElementById('locket-caption-input').value.trim();
 
       const locketData = {
-        photoUrl: photo,
+        photoUrl: capturedDataUrl,
         caption: caption,
         senderId: 'a',
         senderName: 'Anh',
@@ -453,12 +647,21 @@
       updateLocketUI(locketData);
       playSfx('kiss');
       closeLocketModal();
+      document.getElementById('locket-caption-input').value = '';
       showToast('Đã gửi ảnh Locket! Màn hình của Em đã đổi ngay lập tức ✨');
     }
 
     function updateLocketUI(data) {
+      if (!data || !data.photoUrl) return;
+      const emptyEl = document.getElementById('locket-empty-state');
+      if (emptyEl) emptyEl.classList.add('hidden');
+      document.getElementById('locket-photo').classList.remove('hidden');
+      document.getElementById('locket-overlay').classList.remove('hidden');
+      document.getElementById('locket-header-badges').classList.remove('hidden');
+      document.getElementById('locket-caption-box').classList.remove('hidden');
+
       document.getElementById('locket-photo').src = data.photoUrl;
-      document.getElementById('locket-caption').innerText = `"${data.caption}"`;
+      document.getElementById('locket-caption').innerText = `"${data.caption || ''}"`;
       document.getElementById('locket-sender-tag').innerHTML = `<span class="w-2 h-2 rounded-full ${data.senderId === 'a' ? 'bg-sky-400' : 'bg-love-500'}"></span> ${data.senderId === 'a' ? 'Bạn' : 'Em'} vừa gửi`;
       document.getElementById('locket-time-tag').innerText = 'Vừa xong';
     }

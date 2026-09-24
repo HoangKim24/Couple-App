@@ -15,14 +15,14 @@
 // Mặc định đang đọc link demo:
 const COUPLE_API_URL = "https://your-couple-app.web.app/api/widget.json";
 
-// Dữ liệu dự phòng khi chưa có mạng
+// Dữ liệu dự phòng khi chưa có ảnh
 const FALLBACK_DATA = {
-  photoUrl: "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?q=80&w=800&auto=format&fit=crop",
-  caption: "Nhớ người yêu quá nè... 💕",
+  photoUrl: "",
+  caption: "Chưa có ảnh Locket mới nào ✨",
   senderName: "Người Yêu",
-  mood: "Đang nhớ bạn 💕",
+  mood: "Đang online",
   moodEmoji: "❤️",
-  daysTogether: 520,
+  daysTogether: 0,
   updatedAt: "Vừa xong"
 };
 

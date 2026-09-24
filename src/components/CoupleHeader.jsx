@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Heart, Settings } from 'lucide-react';
-import { ANNIVERSARY_DATE } from '../services/storage';
 
 export default function CoupleHeader({ myRole, userA, userB, anniversaryDate, onOpenSettings }) {
   const [days, setDays] = useState(0);
 
   useEffect(() => {
     const calc = () => {
-      const targetDate = anniversaryDate ? new Date(anniversaryDate) : ANNIVERSARY_DATE;
+      const targetDate = anniversaryDate ? new Date(anniversaryDate) : new Date();
       const diff = Math.floor(Math.abs(new Date() - targetDate) / (1000 * 60 * 60 * 24));
       setDays(diff);
     };

@@ -4,7 +4,7 @@ import PasscodeGate from './components/PasscodeGate';
 import CoupleHeader from './components/CoupleHeader';
 import LocketWidget from './components/LocketWidget';
 import HabiBar from './components/HabiBar';
-import CameraModal from './components/CameraModal';
+import LocketCamera from './components/LocketCamera';
 import ScriptableModal from './components/ScriptableModal';
 import SettingsDrawer from './components/SettingsDrawer';
 import { getLocalState, saveLocalState } from './services/storage';
@@ -227,6 +227,7 @@ export default function App() {
         locket={state.latestLocket}
         myRole={state.myRole}
         onReaction={handleQuickReaction}
+        onOpenCapture={() => setIsCameraOpen(true)}
       />
 
       {/* Habi 1-Tap Bar */}
@@ -260,11 +261,12 @@ export default function App() {
         </button>
       </footer>
 
-      {/* Modals */}
-      <CameraModal
+      {/* Real Locket Camera Viewfinder Modal */}
+      <LocketCamera
         isOpen={isCameraOpen}
         onClose={() => setIsCameraOpen(false)}
         onSubmit={handleLocketSubmit}
+        partnerName={state.myRole === 'a' ? (state.userB?.name || 'Em') : (state.userA?.name || 'Anh')}
       />
 
       <ScriptableModal

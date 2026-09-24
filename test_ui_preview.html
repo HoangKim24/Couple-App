@@ -272,7 +272,7 @@
       </div>
 
       <!-- iOS Home Screen Mockup Frame -->
-      <div class="relative w-[390px] h-[520px] bg-cover bg-center rounded-[48px] p-6 shadow-2xl border-4 border-slate-700 flex flex-col justify-start items-center" style="background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1518495973542-4542c06a5843?q=80&w=800&auto=format&fit=crop');">
+      <div class="relative w-[390px] h-[520px] rounded-[48px] p-6 shadow-2xl border-4 border-slate-700 flex flex-col justify-start items-center" style="background: radial-gradient(circle at top, #1e293b 0%, #0f172a 60%, #020617 100%);">
         
         <!-- App Grid Row Mock -->
         <div class="w-full flex justify-between px-2 mb-6 opacity-60">
@@ -310,11 +310,11 @@
   </main>
 
   <!-- CAMERA / PHOTO CAPTION MODAL -->
-  <div id="camera-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] hidden flex items-center justify-center p-4">
-    <div class="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-2xl flex flex-col gap-4">
+  <div id="camera-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-[100] hidden flex items-center justify-center p-4">
+    <div class="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-2xl flex flex-col gap-4">
       <div class="flex items-center justify-between">
         <h3 class="text-base font-bold text-white flex items-center gap-2">
-          <i data-lucide="camera" class="w-5 h-5 text-love-400"></i>
+          <i data-lucide="camera" class="w-5 h-5 text-amber-400"></i>
           <span>Gửi Khoảnh Khắc Locket</span>
         </h3>
         <button onclick="closeCameraModal()" class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center">
@@ -324,40 +324,35 @@
 
       <!-- Preview Image Area -->
       <div class="relative w-full aspect-square bg-slate-950 rounded-2xl overflow-hidden border border-slate-800 flex items-center justify-center">
-        <img id="camera-preview-img" src="https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?q=80&w=800&auto=format&fit=crop" class="w-full h-full object-cover" alt="Preview">
+        <img id="camera-preview-img" src="" class="hidden w-full h-full object-cover" alt="Preview">
         
+        <div id="camera-empty-placeholder" class="flex flex-col items-center justify-center p-4 text-center">
+          <div class="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center mb-2">
+            <i data-lucide="image" class="w-7 h-7"></i>
+          </div>
+          <span class="text-xs text-slate-400">Chưa có ảnh</span>
+        </div>
+
         <!-- Caption Overlay Preview on Photo -->
-        <div class="absolute bottom-4 inset-x-4 flex justify-center">
+        <div class="absolute bottom-4 inset-x-4 flex justify-center z-10">
           <div id="caption-tag-preview" class="bg-black/60 backdrop-blur-md text-white text-xs font-medium px-4 py-2 rounded-full border border-white/20 max-w-[90%] text-center truncate">
-            Nhớ bạn quá nè... 💕
+            Gửi một tin nhắn... 💬
           </div>
         </div>
       </div>
 
-      <!-- Sample Photos Quick Selector -->
-      <div class="flex items-center gap-2 overflow-x-auto hide-scrollbar py-1">
-        <span class="text-[11px] text-slate-400 shrink-0">Chọn ảnh mẫu:</span>
-        <button onclick="pickSamplePhoto('https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?q=80&w=800&auto=format&fit=crop')" class="w-10 h-10 rounded-xl overflow-hidden border-2 border-love-500 shrink-0">
-          <img src="https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?q=80&w=800&auto=format&fit=crop" class="w-full h-full object-cover">
-        </button>
-        <button onclick="pickSamplePhoto('https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=800&auto=format&fit=crop')" class="w-10 h-10 rounded-xl overflow-hidden border-2 border-slate-700 shrink-0">
-          <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=800&auto=format&fit=crop" class="w-full h-full object-cover">
-        </button>
-        <button onclick="pickSamplePhoto('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=800&auto=format&fit=crop')" class="w-10 h-10 rounded-xl overflow-hidden border-2 border-slate-700 shrink-0">
-          <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=800&auto=format&fit=crop" class="w-full h-full object-cover">
-        </button>
-        <button onclick="pickSamplePhoto('https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=800&auto=format&fit=crop')" class="w-10 h-10 rounded-xl overflow-hidden border-2 border-slate-700 shrink-0">
-          <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=800&auto=format&fit=crop" class="w-full h-full object-cover">
-        </button>
-        <label class="w-10 h-10 rounded-xl bg-slate-800 border-2 border-dashed border-slate-600 flex items-center justify-center cursor-pointer shrink-0 hover:border-love-400">
-          <i data-lucide="upload" class="w-4 h-4 text-slate-300"></i>
+      <!-- Upload Controls -->
+      <div class="flex items-center gap-2">
+        <label class="flex-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 py-2.5 rounded-xl flex items-center justify-center gap-2 text-xs font-bold cursor-pointer transition active:scale-95">
+          <i data-lucide="upload" class="w-4 h-4"></i>
+          <span>Chọn Ảnh Từ Thiết Bị</span>
           <input type="file" accept="image/*" class="hidden" onchange="handleCustomPhotoUpload(event)">
         </label>
       </div>
 
       <!-- Caption Input -->
       <div class="relative">
-        <input id="camera-caption-input" type="text" maxlength="60" placeholder="Viết dòng suy nghĩ (caption ngắn)..." 
+        <input id="camera-caption-input" type="text" maxlength="60" placeholder="Gửi một tin nhắn... 💬" 
                oninput="updateCaptionPreview(this.value)"
                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-love-500">
         <span class="absolute right-3 top-3.5 text-[11px] text-slate-500">tối đa 60 chữ</span>
@@ -466,54 +461,25 @@ Script.complete();</pre>
       },
       userA: {
         id: 'a',
-        name: 'Hoàng Kim',
+        name: 'Bạn Trai',
         role: 'Bạn Trai',
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=400&auto=format&fit=crop',
-        mood: 'Đang nhớ em 💕',
+        avatar: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50" fill="%230284c7"/><text x="50" y="62" font-size="42" text-anchor="middle" fill="white">👦</text></svg>',
+        mood: 'Đang online',
         moodIcon: 'heart',
         lastActive: 'Vừa xong'
       },
       userB: {
         id: 'b',
-        name: 'Người Yêu',
+        name: 'Bạn Gái',
         role: 'Bạn Gái',
-        avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=400&auto=format&fit=crop',
-        mood: 'Đang làm việc 💻',
-        moodIcon: 'briefcase',
-        lastActive: '1 phút trước'
+        avatar: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50" fill="%23e11d48"/><text x="50" y="62" font-size="42" text-anchor="middle" fill="white">👧</text></svg>',
+        mood: 'Đang online',
+        moodIcon: 'heart',
+        lastActive: 'Vừa xong'
       },
-      // Ảnh Locket hiện tại (chia sẻ chung)
-      latestLocket: {
-        photoUrl: 'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?q=80&w=800&auto=format&fit=crop',
-        caption: 'Em vừa tan ca nè, nhớ anh quáaa 🥺',
-        senderId: 'b', // người gửi là bạn gái
-        timestamp: new Date().getTime() - 1000 * 60 * 12, // 12 phút trước
-        reactions: ['❤️', '💋']
-      },
-      // Lịch sử các ảnh Locket
-      history: [
-        {
-          id: 1,
-          photoUrl: 'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?q=80&w=800&auto=format&fit=crop',
-          caption: 'Em vừa tan ca nè, nhớ anh quáaa 🥺',
-          sender: 'Bạn Gái',
-          timeStr: '12 phút trước'
-        },
-        {
-          id: 2,
-          photoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=800&auto=format&fit=crop',
-          caption: 'Anh đang đi ăn trưa nè em yêu 🍜',
-          sender: 'Bạn Trai',
-          timeStr: 'Hôm nay, 12:30'
-        },
-        {
-          id: 3,
-          photoUrl: 'https://images.unsplash.com/photo-1518495973542-4542c06a5843?q=80&w=800&auto=format&fit=crop',
-          caption: 'Hôm qua đi dạo ngắm hoàng hôn đẹp ghê 🌅',
-          sender: 'Bạn Gái',
-          timeStr: 'Hôm qua'
-        }
-      ]
+      // Không để ảnh cứng ban đầu
+      latestLocket: null,
+      history: []
     };
 
     // Load state from localStorage or use default
@@ -617,7 +583,59 @@ Script.complete();</pre>
       const timeLove = calculateDaysInLove();
 
       // Kiểm tra xem ai là người vừa gửi ảnh Locket
-      const isPartnerPhoto = locket.senderId !== userId;
+      const isPartnerPhoto = locket ? locket.senderId !== userId : false;
+
+      const locketWidgetContent = locket ? `
+          <!-- LOCKET MAIN MOMENT WIDGET (TRUNG TÂM) -->
+          <div class="relative w-full aspect-square bg-slate-900 rounded-[32px] overflow-hidden border border-slate-800 shadow-xl group flex flex-col justify-end">
+            <!-- Photo Image -->
+            <img src="${locket.photoUrl}" class="absolute inset-0 w-full h-full object-cover select-none">
+            
+            <!-- Gradient Overlay for caption readability -->
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 pointer-events-none"></div>
+
+            <!-- Top Header on Photo: Sender badge & Timestamp -->
+            <div class="absolute top-3 inset-x-3 flex items-center justify-between pointer-events-none">
+              <span class="px-2.5 py-1 rounded-full bg-black/50 backdrop-blur-md text-white text-[11px] font-semibold border border-white/10 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full ${isPartnerPhoto ? 'bg-love-500' : 'bg-sky-400'}"></span>
+                ${isPartnerPhoto ? partner.name : 'Bạn'} vừa gửi
+              </span>
+              <span class="px-2 py-1 rounded-full bg-black/40 backdrop-blur-md text-slate-300 text-[10px]">
+                ${formatTimeAgo(locket.timestamp)}
+              </span>
+            </div>
+
+            <!-- Bottom Caption on Photo (Locket Style) -->
+            <div class="relative z-10 p-4 flex flex-col items-center gap-2">
+              <div class="bg-black/60 backdrop-blur-md text-white font-medium text-xs sm:text-sm px-4 py-2 rounded-2xl border border-white/20 text-center max-w-[95%] shadow-lg">
+                "${locket.caption || ''}"
+              </div>
+
+              <!-- Quick Reactions directly on photo -->
+              <div class="flex items-center gap-1.5 pt-1">
+                <button onclick="reactToPhoto('${userId}', '❤️')" class="px-2.5 py-1 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-md text-xs transition active:scale-90 flex items-center gap-1">
+                  <span>❤️</span> <span class="text-[10px] text-white">Yêu</span>
+                </button>
+                <button onclick="reactToPhoto('${userId}', '💋')" class="px-2.5 py-1 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-md text-xs transition active:scale-90 flex items-center gap-1">
+                  <span>💋</span> <span class="text-[10px] text-white">Hôn</span>
+                </button>
+                <button onclick="reactToPhoto('${userId}', '🥰')" class="px-2.5 py-1 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-md text-xs transition active:scale-90 flex items-center gap-1">
+                  <span>🥰</span> <span class="text-[10px] text-white">Thích</span>
+                </button>
+              </div>
+            </div>
+          </div>
+      ` : `
+          <!-- EMPTY STATE WHEN NO PHOTO -->
+          <div onclick="openCameraModal('${userId}')" class="relative w-full aspect-square bg-slate-900 rounded-[32px] overflow-hidden border border-slate-800 shadow-xl flex flex-col items-center justify-center p-6 text-center cursor-pointer group hover:border-slate-700 transition">
+            <div class="w-16 h-16 rounded-3xl bg-love-500/10 text-love-400 border border-love-500/20 flex items-center justify-center mb-3 group-hover:scale-110 transition shadow-lg">
+              <i data-lucide="camera" class="w-8 h-8 text-love-400"></i>
+            </div>
+            <h3 class="text-sm font-bold text-white font-display">Chưa Có Khoảnh Khắc Nào</h3>
+            <p class="text-xs text-slate-400 mt-1 max-w-[200px]">Chạm vào đây hoặc nút bên dưới để gửi ảnh Locket đầu tiên!</p>
+            <span class="mt-4 px-4 py-1.5 rounded-full bg-love-600/30 text-love-300 border border-love-500/30 text-[11px] font-semibold">📸 Chụp Ảnh Ngay</span>
+          </div>
+      `;
 
       screenEl.innerHTML = `
         <div class="flex-1 flex flex-col p-4 gap-4">
@@ -659,45 +677,7 @@ Script.complete();</pre>
             </div>
           </div>
 
-          <!-- LOCKET MAIN MOMENT WIDGET (TRUNG TÂM) -->
-          <div class="relative w-full aspect-square bg-slate-900 rounded-[32px] overflow-hidden border border-slate-800 shadow-xl group flex flex-col justify-end">
-            <!-- Photo Image -->
-            <img src="${locket.photoUrl}" class="absolute inset-0 w-full h-full object-cover select-none">
-            
-            <!-- Gradient Overlay for caption readability -->
-            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 pointer-events-none"></div>
-
-            <!-- Top Header on Photo: Sender badge & Timestamp -->
-            <div class="absolute top-3 inset-x-3 flex items-center justify-between pointer-events-none">
-              <span class="px-2.5 py-1 rounded-full bg-black/50 backdrop-blur-md text-white text-[11px] font-semibold border border-white/10 flex items-center gap-1.5">
-                <span class="w-2 h-2 rounded-full ${isPartnerPhoto ? 'bg-love-500' : 'bg-sky-400'}"></span>
-                ${isPartnerPhoto ? partner.name : 'Bạn'} vừa gửi
-              </span>
-              <span class="px-2 py-1 rounded-full bg-black/40 backdrop-blur-md text-slate-300 text-[10px]">
-                ${formatTimeAgo(locket.timestamp)}
-              </span>
-            </div>
-
-            <!-- Bottom Caption on Photo (Locket Style) -->
-            <div class="relative z-10 p-4 flex flex-col items-center gap-2">
-              <div class="bg-black/60 backdrop-blur-md text-white font-medium text-xs sm:text-sm px-4 py-2 rounded-2xl border border-white/20 text-center max-w-[95%] shadow-lg">
-                "${locket.caption}"
-              </div>
-
-              <!-- Quick Reactions directly on photo -->
-              <div class="flex items-center gap-1.5 pt-1">
-                <button onclick="reactToPhoto('${userId}', '❤️')" class="px-2.5 py-1 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-md text-xs transition active:scale-90 flex items-center gap-1">
-                  <span>❤️</span> <span class="text-[10px] text-white">Yêu</span>
-                </button>
-                <button onclick="reactToPhoto('${userId}', '💋')" class="px-2.5 py-1 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-md text-xs transition active:scale-90 flex items-center gap-1">
-                  <span>💋</span> <span class="text-[10px] text-white">Hôn</span>
-                </button>
-                <button onclick="reactToPhoto('${userId}', '🥰')" class="px-2.5 py-1 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-md text-xs transition active:scale-90 flex items-center gap-1">
-                  <span>🥰</span> <span class="text-[10px] text-white">Thích</span>
-                </button>
-              </div>
-            </div>
-          </div>
+          ${locketWidgetContent}
 
           <!-- HABI 1-TAP EMOTION BAR (GỬI CẢM XÚC NỔ MÀN HÌNH ĐỐI PHƯƠNG) -->
           <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 flex flex-col gap-2">
@@ -937,7 +917,7 @@ Script.complete();</pre>
     function updateCaptionPreview(text) {
       const tag = document.getElementById('caption-tag-preview');
       if (tag) {
-        tag.innerText = text.trim() || 'Nhớ bạn quá nè... 💕';
+        tag.innerText = text.trim() || 'Gửi một tin nhắn... 💬';
       }
     }
 
@@ -998,6 +978,23 @@ Script.complete();</pre>
       const widgetEl = document.getElementById('ios-large-widget');
       if (!widgetEl) return;
 
+      if (!locket) {
+        widgetEl.innerHTML = `
+          <div class="relative w-full h-full bg-slate-900 flex flex-col items-center justify-center p-6 text-center">
+            <div class="w-14 h-14 rounded-2xl bg-love-500/10 text-love-400 border border-love-500/20 flex items-center justify-center mb-2">
+              <i data-lucide="camera" class="w-7 h-7"></i>
+            </div>
+            <h4 class="text-sm font-bold text-white font-display">Couple Locket</h4>
+            <p class="text-[11px] text-slate-400 mt-1 max-w-[200px]">Chưa có ảnh nào được gửi</p>
+            <div class="mt-3 flex items-center gap-1 text-[11px] font-bold text-rose-200 bg-love-950/60 px-3 py-1 rounded-full border border-love-500/30">
+              <span>❤️</span> ${timeLove.days} ngày yêu
+            </div>
+          </div>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
       widgetEl.innerHTML = `
         <!-- Background Locket Image -->
         <img src="${locket.photoUrl}" class="absolute inset-0 w-full h-full object-cover">
@@ -1019,7 +1016,7 @@ Script.complete();</pre>
         <!-- Footer of Widget: Caption & Timestamp -->
         <div class="relative z-10 mt-auto p-5 flex flex-col gap-1 text-white">
           <p class="font-bold text-sm tracking-tight drop-shadow-md">
-            "${locket.caption}"
+            "${locket.caption || ''}"
           </p>
           <div class="flex items-center justify-between text-[11px] text-slate-300 pt-1">
             <span>Người gửi: <b class="text-white">${locket.senderId === 'a' ? data.userA.name : data.userB.name}</b></span>
@@ -1027,6 +1024,7 @@ Script.complete();</pre>
           </div>
         </div>
       `;
+      lucide.createIcons();
     }
 
     // --- 10. STUDIO MODES (Dual vs Single vs Widget) ---
