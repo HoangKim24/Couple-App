@@ -1,19 +1,42 @@
 import React, { useState } from 'react';
-import { Lock, HeartHandshake, KeyRound } from 'lucide-react';
-import { SECRET_PASSCODE } from '../services/storage';
+import { HeartHandshake, KeyRound } from 'lucide-react';
+import { PASSCODE_BOY, PASSCODE_GIRL } from '../services/storage';
 import { sound } from '../services/audio';
 
 export default function PasscodeGate({ onUnlock }) {
   const [code, setCode] = useState('');
-  const [role, setRole] = useState('a');
   const [error, setError] = useState(false);
+
+  const checkCode = (val) => {
+    const clean = val.trim();
+    if (clean === PASSCODE_BOY) {
+      sound.play('heart');
+      onUnlock('a'); // Con Trai
+      return true;
+    } else if (clean === PASSCODE_GIRL) {
+      sound.play('heart');
+      onUnlock('b'); // Con Gái
+      return true;
+    }
+    return false;
+  };
+
+  const handleInputChange = (e) => {
+    const val = e.target.value;
+    setCode(val);
+    if (val.length >= 2) {
+      if (!checkCode(val)) {
+        // If 2 characters entered and doesn't match either 00 or 01
+        sound.play('pout');
+        setError(true);
+        setTimeout(() => setError(false), 800);
+      }
+    }
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (code.trim() === SECRET_PASSCODE) {
-      sound.play('heart');
-      onUnlock(role);
-    } else {
+    if (!checkCode(code)) {
       sound.play('pout');
       setError(true);
       setTimeout(() => setError(false), 800);
@@ -26,37 +49,25 @@ export default function PasscodeGate({ onUnlock }) {
         <HeartHandshake className="w-10 h-10 text-love-500 animate-pulse" />
       </div>
 
-      <h1 className="text-2xl font-bold font-display text-white tracking-tight">Không Gian Riêng Tư</h1>
-      <p className="text-xs text-slate-400 mt-1.5 mb-8 max-w-[280px]">
-        Nhập mã số bí mật của 2 bạn để mở khóa (Gợi ý: <span className="text-love-400 font-mono font-bold">{SECRET_PASSCODE}</span>)
+      <h1 className="text-2xl font-bold font-display text-white tracking-tight">Mã Số Bí Mật</h1>
+      <p className="text-xs text-slate-400 mt-1.5 mb-6 max-w-[280px]">
+        Nhập mã của bạn để vào app:
+        <br />
+        <span className="text-sky-400 font-mono font-bold">00</span> (Con Trai) • <span className="text-love-400 font-mono font-bold">01</span> (Con Gái)
       </p>
 
       <form onSubmit={handleSubmit} className="w-full max-w-[260px] flex flex-col gap-3.5">
         <input
           type="password"
-          maxLength={7}
+          maxLength={2}
+          autoFocus
           value={code}
-          onChange={(e) => setCode(e.target.value)}
-          placeholder="Mã bí mật..."
+          onChange={handleInputChange}
+          placeholder="••"
           className={`w-full bg-slate-900 border ${
             error ? 'border-red-500 animate-bounce' : 'border-slate-800'
-          } text-center tracking-widest text-xl font-mono text-love-400 rounded-2xl py-3.5 focus:outline-none focus:border-love-500 shadow-inner`}
+          } text-center tracking-widest text-3xl font-mono text-love-400 rounded-2xl py-3 focus:outline-none focus:border-love-500 shadow-inner`}
         />
-
-        <div className="flex items-center justify-center gap-2 pt-1 text-xs">
-          <label className={`flex-1 border rounded-xl p-2.5 flex items-center justify-center gap-1.5 cursor-pointer transition ${
-            role === 'a' ? 'border-sky-400 bg-sky-950/40 text-sky-200' : 'border-slate-800 bg-slate-900 text-slate-400'
-          }`}>
-            <input type="radio" name="role" value="a" checked={role === 'a'} onChange={() => setRole('a')} className="hidden" />
-            <span>👦 Bạn Trai</span>
-          </label>
-          <label className={`flex-1 border rounded-xl p-2.5 flex items-center justify-center gap-1.5 cursor-pointer transition ${
-            role === 'b' ? 'border-love-500 bg-love-950/40 text-love-200' : 'border-slate-800 bg-slate-900 text-slate-400'
-          }`}>
-            <input type="radio" name="role" value="b" checked={role === 'b'} onChange={() => setRole('b')} className="hidden" />
-            <span>👧 Bạn Gái</span>
-          </label>
-        </div>
 
         <button
           type="submit"
@@ -67,7 +78,12 @@ export default function PasscodeGate({ onUnlock }) {
         </button>
       </form>
 
-      <span className="text-[11px] text-slate-500 mt-8">Nhập 1 lần duy nhất, mở app là vào thẳng!</span>
+      <div className="flex items-center gap-4 text-[11px] text-slate-500 mt-6">
+        <span className="flex items-center gap-1">👦 Con Trai: <b className="text-sky-400 font-mono">00</b></span>
+        <span>•</span>
+        <span className="flex items-center gap-1">👧 Con Gái: <b className="text-love-400 font-mono">01</b></span>
+      </div>
+      <span className="text-[10px] text-slate-600 mt-2">Chỉ cần nhập 1 lần duy nhất trên máy!</span>
     </div>
   );
 }

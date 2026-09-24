@@ -1,5 +1,6 @@
 // Storage & Sync Service
-export const SECRET_PASSCODE = "0119111";
+export const PASSCODE_BOY = "00";
+export const PASSCODE_GIRL = "01";
 export const ANNIVERSARY_DATE = new Date("2024-04-20T00:00:00");
 
 export const DEFAULT_STATE = {
