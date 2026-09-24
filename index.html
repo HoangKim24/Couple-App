@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="vi" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Couple Locket & Habi</title>
+  
+  <!-- iOS PWA Meta Tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Couple">
+  <meta name="theme-color" content="#020617">
+  
+  <!-- Web App Manifest -->
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="https://images.unsplash.com/photo-1518199266791-5375a83190b7?q=80&w=192&auto=format&fit=crop">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS Play CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            display: ['"Outfit"', 'sans-serif'],
+          },
+          colors: {
+            love: {
+              50: '#fff1f2',
+              100: '#ffe4e6',
+              200: '#fecdd3',
+              300: '#fda4af',
+              400: '#fb7185',
+              500: '#f43f5e',
+              600: '#e11d48',
+              700: '#be123c',
+              800: '#9f1239',
+              900: '#881337',
+            }
+          },
+          animation: {
+            'heart-beat': 'heartBeat 1.4s ease-in-out infinite',
+            'float': 'float 3s ease-in-out infinite',
+          },
+          keyframes: {
+            heartBeat: {
+              '0%, 100%': { transform: 'scale(1)' },
+              '14%': { transform: 'scale(1.15)' },
+              '28%': { transform: 'scale(1)' },
+              '42%': { transform: 'scale(1.15)' },
+              '70%': { transform: 'scale(1)' },
+            },
+            float: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-6px)' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* iOS Safe Area Inset Support */
+    :root {
+      --sat: env(safe-area-inset-top, 20px);
+      --sab: env(safe-area-inset-bottom, 20px);
+    }
+    body {
+      padding-top: var(--sat);
+      padding-bottom: var(--sab);
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      overscroll-behavior-y: none;
+    }
+    .safe-pt { padding-top: var(--sat); }
+    .safe-pb { padding-bottom: var(--sab); }
+
+    /* Particles animations */
+    .kiss-burst-anim {
+      position: absolute;
+      pointer-events: none;
+      font-size: 3.5rem;
+      animation: kissAnim 1.2s cubic-bezier(0.1, 0.8, 0.2, 1) forwards;
+      z-index: 999;
+    }
+    @keyframes kissAnim {
+      0% { transform: scale(0.2) rotate(-15deg); opacity: 0; }
+      30% { transform: scale(1.3) rotate(5deg); opacity: 1; }
+      70% { transform: scale(1.1) rotate(-5deg); opacity: 0.9; }
+      100% { transform: scale(1.5) translateY(-50px); opacity: 0; }
+    }
+    .heart-float-anim {
+      position: absolute;
+      pointer-events: none;
+      animation: heartFloat 2.5s ease-out forwards;
+      z-index: 998;
+    }
+    @keyframes heartFloat {
+      0% { transform: translateY(0) scale(0.6); opacity: 1; }
+      100% { transform: translateY(-450px) scale(1.4) rotate(45deg); opacity: 0; }
+    }
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 h-full flex flex-col items-center justify-between font-sans antialiased overflow-hidden">
+
+  <!-- MAIN APP CONTAINER (MAX WIDTH MOBILE) -->
+  <div id="app-wrapper" class="w-full max-w-md h-full flex flex-col justify-between relative px-4 py-2 overflow-hidden">
+    
+    <!-- PASSCODE GATE (SHOWN ON FIRST VISIT) -->
+    <div id="passcode-view" class="hidden absolute inset-0 bg-slate-950 z-50 flex flex-col justify-center items-center px-6 text-center">
+      <div class="w-20 h-20 rounded-3xl bg-love-500/20 text-love-400 flex items-center justify-center mb-5 border border-love-500/30 shadow-2xl shadow-love-500/20">
+        <i data-lucide="heart-handshake" class="w-10 h-10 animate-pulse text-love-500"></i>
+      </div>
+
+      <h1 class="text-2xl font-bold font-display text-white tracking-tight">Không Gian Riêng Tư</h1>
+      <p class="text-xs text-slate-400 mt-1.5 mb-8 max-w-[280px]">
+        Nhập mã số bí mật của 2 bạn để mở khóa (Gợi ý: <span class="text-love-400 font-mono font-bold">0119111</span>)
+      </p>
+
+      <!-- Pin Input -->
+      <div class="w-full max-w-[260px] flex flex-col gap-3 mb-6">
+        <input id="passcode-input" type="password" maxlength="7" placeholder="Mã bí mật..."
+               class="w-full bg-slate-900 border border-slate-800 text-center tracking-widest text-xl font-mono text-love-400 rounded-2xl py-3.5 focus:outline-none focus:border-love-500 shadow-inner">
+        
+        <!-- Identity Selector -->
+        <div class="flex items-center justify-center gap-2 pt-1 text-xs">
+          <label class="flex-1 bg-slate-900 border border-slate-800 rounded-xl p-2.5 flex items-center justify-center gap-1.5 cursor-pointer has-[:checked]:border-love-500 has-[:checked]:bg-love-950/30">
+            <input type="radio" name="my-role" value="a" checked class="hidden">
+            <span>👦 Bạn Trai</span>
+          </label>
+          <label class="flex-1 bg-slate-900 border border-slate-800 rounded-xl p-2.5 flex items-center justify-center gap-1.5 cursor-pointer has-[:checked]:border-love-500 has-[:checked]:bg-love-950/30">
+            <input type="radio" name="my-role" value="b" class="hidden">
+            <span>👧 Bạn Gái</span>
+          </label>
+        </div>
+      </div>
+
+      <button onclick="handleUnlock()" class="w-full max-w-[260px] bg-gradient-to-r from-love-600 to-rose-500 text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-love-500/30 transition transform active:scale-95 flex items-center justify-center gap-2">
+        <i data-lucide="key-round" class="w-4 h-4"></i>
+        <span>Vào App Ngay 💕</span>
+      </button>
+
+      <span class="text-[11px] text-slate-500 mt-8">Nhập 1 lần duy nhất, mở app là vào thẳng!</span>
+    </div>
+
+    <!-- MAIN HOME VIEW (LOCKET & HABI) -->
+    <div id="main-view" class="flex-1 flex flex-col justify-between h-full overflow-hidden">
+      
+      <!-- TOP HEADER: COUPLE INFO & DAYS IN LOVE -->
+      <header class="w-full bg-slate-900/90 border border-slate-800/90 rounded-2xl p-3 flex items-center justify-between shadow-md shrink-0">
+        <!-- My Profile -->
+        <div class="flex items-center gap-2">
+          <div class="relative">
+            <img id="my-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=400&auto=format&fit=crop" class="w-9 h-9 rounded-full object-cover border-2 border-slate-700">
+            <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full ring-2 ring-slate-950"></span>
+          </div>
+          <div>
+            <span id="my-name" class="text-xs font-bold text-white block leading-tight">Bạn</span>
+            <span id="my-mood" class="text-[10px] text-slate-400 block truncate max-w-[70px]">Đang online</span>
+          </div>
+        </div>
+
+        <!-- Days Counter Heart -->
+        <div class="flex flex-col items-center cursor-pointer" onclick="toggleHistoryView()">
+          <div class="flex items-center gap-1 text-love-500 font-extrabold text-sm font-display">
+            <i data-lucide="heart" class="w-3.5 h-3.5 fill-love-500 animate-heart-beat"></i>
+            <span id="love-days-count">520</span>
+            <span class="text-[11px] font-medium text-slate-300">Ngày</span>
+          </div>
+          <span class="text-[9px] text-love-300/70 font-mono tracking-wider">BÊN NHAU</span>
+        </div>
+
+        <!-- Partner Profile -->
+        <div class="flex items-center gap-2 text-right">
+          <div>
+            <span id="partner-name" class="text-xs font-bold text-white block leading-tight">Người Yêu</span>
+            <span id="partner-mood" class="text-[10px] text-love-400 font-semibold block truncate max-w-[70px]">Đang nhớ bạn</span>
+          </div>
+          <div class="relative">
+            <img id="partner-avatar" src="https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=400&auto=format&fit=crop" class="w-9 h-9 rounded-full object-cover border-2 border-love-500/80">
+            <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-love-500 rounded-full ring-2 ring-slate-950 animate-ping"></span>
+          </div>
+        </div>
+      </header>
+
+      <!-- CENTER: LOCKET MAIN PHOTO WIDGET -->
+      <div class="relative w-full aspect-square my-auto bg-slate-900 rounded-[32px] overflow-hidden border border-slate-800 shadow-2xl flex flex-col justify-end group">
+        <img id="locket-main-photo" src="https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?q=80&w=800&auto=format&fit=crop" class="absolute inset-0 w-full h-full object-cover select-none">
+        
+        <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/35 pointer-events-none"></div>
+
+        <!-- Top photo banner -->
+        <div class="absolute top-3.5 inset-x-3.5 flex items-center justify-between pointer-events-none">
+          <span id="locket-sender-badge" class="px-2.5 py-1 rounded-full bg-black/50 backdrop-blur-md text-white text-[11px] font-semibold border border-white/10 flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-love-500"></span>
+            Người yêu vừa gửi
+          </span>
+          <span id="locket-time-badge" class="px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-md text-slate-300 text-[10px]">
+            10 phút trước
+          </span>
+        </div>
+
+        <!-- Caption on photo -->
+        <div class="relative z-10 p-4 flex flex-col items-center gap-2">
+          <div id="locket-caption-text" class="bg-black/60 backdrop-blur-md text-white font-medium text-xs sm:text-sm px-4 py-2 rounded-2xl border border-white/20 text-center max-w-[95%] shadow-lg">
+            "Em vừa tan ca nè, nhớ anh quáaa 🥺"
+          </div>
+
+          <!-- Quick Reactions on Photo -->
+          <div class="flex items-center gap-2 pt-1">
+            <button onclick="triggerQuickReaction('❤️')" class="px-3 py-1 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-md text-xs transition active:scale-90 flex items-center gap-1">
+              <span>❤️</span> <span class="text-[10px] text-white">Yêu</span>
+            </button>
+            <button onclick="triggerQuickReaction('💋')" class="px-3 py-1 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-md text-xs transition active:scale-90 flex items-center gap-1">
+              <span>💋</span> <span class="text-[10px] text-white">Hôn</span>
+            </button>
+            <button onclick="triggerQuickReaction('🥰')" class="px-3 py-1 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-md text-xs transition active:scale-90 flex items-center gap-1">
+              <span>🥰</span> <span class="text-[10px] text-white">Thích</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- HABI 1-TAP EMOTION BAR -->
+      <div class="w-full bg-slate-900/90 border border-slate-800 rounded-2xl p-2.5 flex flex-col gap-2 shrink-0">
+        <div class="flex items-center justify-between text-xs px-1">
+          <span class="font-bold text-slate-200 flex items-center gap-1.5 text-[11px]">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-love-400"></i>
+            Chạm Gửi Cảm Xúc Habi
+          </span>
+          <span class="text-[10px] text-love-400 font-semibold">Tức thì 0.1s</span>
+        </div>
+
+        <div class="grid grid-cols-4 gap-2">
+          <button onclick="handleHabiTap('kiss')" class="flex flex-col items-center justify-center p-2 rounded-xl bg-slate-800/80 hover:bg-love-950/40 border border-slate-700/60 transition active:scale-90 group">
+            <span class="text-2xl group-hover:scale-125 transition-transform">💋</span>
+            <span class="text-[10px] text-slate-300 font-medium mt-1">Gửi Hôn</span>
+          </button>
+          <button onclick="handleHabiTap('heart')" class="flex flex-col items-center justify-center p-2 rounded-xl bg-slate-800/80 hover:bg-love-950/40 border border-slate-700/60 transition active:scale-90 group">
+            <span class="text-2xl group-hover:scale-125 transition-transform">❤️</span>
+            <span class="text-[10px] text-slate-300 font-medium mt-1">Nhớ Bạn</span>
+          </button>
+          <button onclick="handleHabiTap('hug')" class="flex flex-col items-center justify-center p-2 rounded-xl bg-slate-800/80 hover:bg-love-950/40 border border-slate-700/60 transition active:scale-90 group">
+            <span class="text-2xl group-hover:scale-125 transition-transform">🫂</span>
+            <span class="text-[10px] text-slate-300 font-medium mt-1">Ôm Cái</span>
+          </button>
+          <button onclick="handleHabiTap('pout')" class="flex flex-col items-center justify-center p-2 rounded-xl bg-slate-800/80 hover:bg-love-950/40 border border-slate-700/60 transition active:scale-90 group">
+            <span class="text-2xl group-hover:scale-125 transition-transform">😤</span>
+            <span class="text-[10px] text-slate-300 font-medium mt-1">Bực Bội</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- BOTTOM CONTROL BAR: BIG CAMERA BUTTON & SETTINGS -->
+      <footer class="w-full flex items-center justify-between py-2 shrink-0">
+        <button onclick="toggleHistoryView()" class="w-11 h-11 rounded-2xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white flex items-center justify-center active:scale-90 transition">
+          <i data-lucide="clock" class="w-5 h-5"></i>
+        </button>
+
+        <!-- Big Center Camera Button -->
+        <button onclick="openCameraSheet()" class="flex items-center gap-2.5 bg-gradient-to-r from-love-600 via-rose-500 to-pink-500 text-white font-bold px-6 py-3.5 rounded-full shadow-lg shadow-love-600/40 hover:scale-105 active:scale-95 transition-all">
+          <i data-lucide="camera" class="w-5 h-5"></i>
+          <span class="text-sm tracking-wide">Chụp & Gửi Locket</span>
+        </button>
+
+        <button onclick="openScriptableModal()" class="w-11 h-11 rounded-2xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white flex items-center justify-center active:scale-90 transition">
+          <i data-lucide="layout-grid" class="w-5 h-5"></i>
+        </button>
+      </footer>
+
+    </div>
+
+    <!-- MEMORY HISTORY SHEET (HIDDEN BY DEFAULT) -->
+    <div id="history-view" class="hidden absolute inset-0 bg-slate-950/95 backdrop-blur-xl z-40 flex flex-col p-4 overflow-y-auto hide-scrollbar">
+      <div class="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
+        <h2 class="text-base font-bold text-white flex items-center gap-2">
+          <i data-lucide="film" class="w-5 h-5 text-love-500"></i>
+          <span>Cuộn Phim Kỷ Niệm (Timeline)</span>
+        </h2>
+        <button onclick="toggleHistoryView()" class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div id="history-list" class="flex flex-col gap-4">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+    <!-- PARTICLES LAYER -->
+    <div id="particles-overlay" class="absolute inset-0 pointer-events-none z-50 overflow-hidden"></div>
+  </div>
+
+  <!-- CAMERA / CAPTION MODAL -->
+  <div id="camera-sheet" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-3xl p-4 shadow-2xl flex flex-col gap-3">
+      <div class="flex items-center justify-between">
+        <span class="text-sm font-bold text-white flex items-center gap-1.5">
+          <i data-lucide="camera" class="w-4 h-4 text-love-400"></i>
+          Gửi Ảnh Locket
+        </span>
+        <button onclick="closeCameraSheet()" class="w-7 h-7 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center">
+          <i data-lucide="x" class="w-3.5 h-3.5"></i>
+        </button>
+      </div>
+
+      <!-- Image Preview -->
+      <div class="relative w-full aspect-square bg-slate-950 rounded-2xl overflow-hidden border border-slate-800">
+        <img id="new-photo-preview" src="https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?q=80&w=800&auto=format&fit=crop" class="w-full h-full object-cover">
+        
+        <div class="absolute bottom-3 inset-x-3 flex justify-center">
+          <div id="new-caption-preview" class="bg-black/60 backdrop-blur-md text-white text-xs font-medium px-3.5 py-1.5 rounded-full border border-white/20 max-w-[90%] text-center truncate">
+            Nhớ bạn quá nè... 💕
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Upload or Preset -->
+      <div class="flex items-center gap-2">
+        <label class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium py-2.5 rounded-xl border border-slate-700 flex items-center justify-center gap-1.5 cursor-pointer transition">
+          <i data-lucide="image" class="w-4 h-4 text-rose-400"></i>
+          <span>Chọn Từ Thư Viện</span>
+          <input type="file" accept="image/*" class="hidden" onchange="handleFileSelect(event)">
+        </label>
+        <button onclick="switchRandomSample()" class="px-3 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-xl border border-slate-700 transition">
+          Đổi Ảnh Mẫu
+        </button>
+      </div>
+
+      <!-- Caption Input -->
+      <input id="new-caption-input" type="text" maxlength="60" placeholder="Viết dòng caption ngắn..." 
+             oninput="document.getElementById('new-caption-preview').innerText = this.value.trim() || 'Nhớ bạn quá nè... 💕'"
+             class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-love-500">
+
+      <button onclick="submitNewLocket()" class="w-full bg-love-600 hover:bg-love-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-love-600/30 transition flex items-center justify-center gap-2 text-xs">
+        <i data-lucide="send" class="w-4 h-4"></i>
+        <span>Gửi Cho Người Yêu Ngay ✨</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- SCRIPTABLE WIDGET MODAL -->
+  <div id="scriptable-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-2xl flex flex-col gap-3">
+      <div class="flex items-center justify-between">
+        <span class="text-sm font-bold text-white flex items-center gap-1.5">
+          <i data-lucide="layout-grid" class="w-4 h-4 text-love-400"></i>
+          Widget 4x4 Cho iPhone
+        </span>
+        <button onclick="closeScriptableModal()" class="w-7 h-7 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center">
+          <i data-lucide="x" class="w-3.5 h-3.5"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-300">
+        Bạn có thể cài Widget 4x4 ngoài màn hình chính iPhone thông qua ứng dụng miễn phí <b>Scriptable</b> trên App Store!
+      </p>
+
+      <a href="./scriptable-widget.js" target="_blank" class="w-full bg-slate-800 hover:bg-slate-700 text-love-300 text-xs font-semibold py-2.5 rounded-xl border border-slate-700 flex items-center justify-center gap-2 transition">
+        <i data-lucide="file-code" class="w-4 h-4"></i>
+        <span>Xem File scriptable-widget.js</span>
+      </a>
+
+      <button onclick="copyWidgetCode()" id="btn-copy-widget" class="w-full bg-love-600 hover:bg-love-500 text-white text-xs font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-1.5">
+        <i data-lucide="copy" class="w-4 h-4"></i>
+        <span>Sao Chép Mã Cho Scriptable</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div id="toast" class="fixed top-6 z-[100] transition-all duration-300 transform -translate-y-20 opacity-0 bg-slate-900 border border-love-500/50 text-white text-xs font-semibold px-4 py-2.5 rounded-full shadow-2xl flex items-center gap-2 backdrop-blur-md">
+    <i data-lucide="bell" class="w-4 h-4 text-love-400"></i>
+    <span id="toast-text">Thông báo</span>
+  </div>
+
+  <!-- APP LOGIC -->
+  <script>
+    const SECRET_PASSCODE = "0119111";
+    const ANNIVERSARY_DATE = new Date("2024-04-20T00:00:00");
+
+    const SAMPLE_PHOTOS = [
+      'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?q=80&w=800&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=800&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=800&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1518495973542-4542c06a5843?q=80&w=800&auto=format&fit=crop'
+    ];
+
+    // Audio synthesizer
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playBeep(type) {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      const now = audioCtx.currentTime;
+
+      if (type === 'kiss') {
+        osc.frequency.setValueAtTime(600, now);
+        osc.frequency.exponentialRampToValueAtTime(1200, now + 0.15);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+        osc.start(now);
+        osc.stop(now + 0.2);
+      } else if (type === 'heart') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(523.25, now);
+        osc.frequency.setValueAtTime(659.25, now + 0.08);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+        osc.start(now);
+        osc.stop(now + 0.3);
+      } else {
+        osc.frequency.setValueAtTime(700, now);
+        gain.gain.setValueAtTime(0.1, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+        osc.start(now);
+        osc.stop(now + 0.08);
+      }
+    }
+
+    // Days counter
+    function updateLoveDays() {
+      const diffTime = Math.abs(new Date() - ANNIVERSARY_DATE);
+      const days = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      const el = document.getElementById('love-days-count');
+      if (el) el.innerText = days;
+    }
+
+    // App State Management
+    function loadAppState() {
+      const isAuth = localStorage.getItem('couple_auth_done');
+      const myRole = localStorage.getItem('couple_my_role') || 'a';
+
+      if (!isAuth) {
+        document.getElementById('passcode-view').classList.remove('hidden');
+      } else {
+        document.getElementById('passcode-view').classList.add('hidden');
+        renderHome(myRole);
+      }
+    }
+
+    function handleUnlock() {
+      const input = document.getElementById('passcode-input');
+      const role = document.querySelector('input[name="my-role"]:checked').value;
+
+      if (input.value.trim() === SECRET_PASSCODE) {
+        playBeep('heart');
+        localStorage.setItem('couple_auth_done', 'true');
+        localStorage.setItem('couple_my_role', role);
+        showToast('Mở khóa thành công! Chào mừng bạn 💕');
+        loadAppState();
+      } else {
+        playBeep('pout');
+        input.classList.add('border-red-500');
+        showToast('Mã số không đúng! Gợi ý: ' + SECRET_PASSCODE);
+        setTimeout(() => input.classList.remove('border-red-500'), 600);
+      }
+    }
+
+    function renderHome(myRole) {
+      updateLoveDays();
+      const isBoy = myRole === 'a';
+      
+      document.getElementById('my-name').innerText = isBoy ? 'Anh' : 'Em';
+      document.getElementById('partner-name').innerText = isBoy ? 'Em' : 'Anh';
+      
+      document.getElementById('my-avatar').src = isBoy 
+        ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=400&auto=format&fit=crop'
+        : 'https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=400&auto=format&fit=crop';
+        
+      document.getElementById('partner-avatar').src = isBoy
+        ? 'https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=400&auto=format&fit=crop'
+        : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=400&auto=format&fit=crop';
+    }
+
+    // Habi Reaction Taps
+    function handleHabiTap(type) {
+      playBeep(type);
+      const container = document.getElementById('particles-overlay');
+
+      if (type === 'kiss') {
+        showKiss(container);
+        showToast('Đã gửi nụ hôn nồng cháy 💋');
+      } else if (type === 'heart') {
+        showHearts(container);
+        showToast('Đã thả mưa tim nhớ bạn ❤️');
+      } else if (type === 'hug') {
+        showToast('Đã gửi một cái ôm thật chặt 🫂');
+      } else if (type === 'pout') {
+        document.getElementById('app-wrapper').classList.add('animate-bounce');
+        setTimeout(() => document.getElementById('app-wrapper').classList.remove('animate-bounce'), 700);
+        showToast('Đã gửi tín hiệu bực bội / dỗi hờn 😤');
+      }
+    }
+
+    function showKiss(container) {
+      for (let i = 0; i < 5; i++) {
+        const k = document.createElement('div');
+        k.className = 'kiss-burst-anim';
+        k.innerText = '💋';
+        k.style.left = `${25 + Math.random() * 50}%`;
+        k.style.top = `${25 + Math.random() * 40}%`;
+        container.appendChild(k);
+        setTimeout(() => k.remove(), 1200);
+      }
+    }
+
+    function showHearts(container) {
+      for (let i = 0; i < 15; i++) {
+        setTimeout(() => {
+          const h = document.createElement('div');
+          h.className = 'heart-float-anim text-2xl';
+          h.innerText = ['❤️', '💖', '💕', '💗'][Math.floor(Math.random() * 4)];
+          h.style.left = `${10 + Math.random() * 80}%`;
+          h.style.bottom = '10%';
+          container.appendChild(h);
+          setTimeout(() => h.remove(), 2500);
+        }, i * 60);
+      }
+    }
+
+    function triggerQuickReaction(emoji) {
+      playBeep('heart');
+      showToast(`Đã thả reaction ${emoji} lên ảnh!`);
+      showHearts(document.getElementById('particles-overlay'));
+    }
+
+    // Camera Sheet & Locket Submit
+    function openCameraSheet() {
+      playBeep('tap');
+      document.getElementById('camera-sheet').classList.remove('hidden');
+    }
+    function closeCameraSheet() {
+      document.getElementById('camera-sheet').classList.add('hidden');
+    }
+
+    function handleFileSelect(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          document.getElementById('new-photo-preview').src = evt.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function switchRandomSample() {
+      playBeep('tap');
+      const random = SAMPLE_PHOTOS[Math.floor(Math.random() * SAMPLE_PHOTOS.length)];
+      document.getElementById('new-photo-preview').src = random;
+    }
+
+    function submitNewLocket() {
+      const photo = document.getElementById('new-photo-preview').src;
+      const cap = document.getElementById('new-caption-input').value.trim() || 'Nhớ bạn quá nè... 💕';
+
+      document.getElementById('locket-main-photo').src = photo;
+      document.getElementById('locket-caption-text').innerText = `"${cap}"`;
+      document.getElementById('locket-sender-badge').innerHTML = `<span class="w-2 h-2 rounded-full bg-sky-400"></span> Bạn vừa gửi`;
+      document.getElementById('locket-time-badge').innerText = 'Vừa xong';
+
+      playBeep('kiss');
+      closeCameraSheet();
+      showToast('Đã đăng ảnh Locket mới thành công! ✨');
+    }
+
+    // Modal Scriptable
+    function openScriptableModal() {
+      playBeep('tap');
+      document.getElementById('scriptable-modal').classList.remove('hidden');
+    }
+    function closeScriptableModal() {
+      document.getElementById('scriptable-modal').classList.add('hidden');
+    }
+
+    function copyWidgetCode() {
+      fetch('./scriptable-widget.js')
+        .then(res => res.text())
+        .then(text => {
+          navigator.clipboard.writeText(text);
+          showToast('Đã sao chép mã Widget cho iPhone!');
+          closeScriptableModal();
+        }).catch(() => {
+          showToast('Vui lòng mở file scriptable-widget.js để copy!');
+        });
+    }
+
+    // History Sheet
+    function toggleHistoryView() {
+      playBeep('tap');
+      const el = document.getElementById('history-view');
+      el.classList.toggle('hidden');
+      if (!el.classList.contains('hidden')) {
+        renderHistory();
+      }
+    }
+
+    function renderHistory() {
+      const list = document.getElementById('history-list');
+      list.innerHTML = `
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3 flex gap-3 items-center">
+          <img src="https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?q=80&w=300&auto=format&fit=crop" class="w-16 h-16 rounded-xl object-cover">
+          <div>
+            <p class="text-xs font-bold text-white">"Em vừa tan ca nè, nhớ anh quáaa 🥺"</p>
+            <span class="text-[10px] text-slate-400">Người Yêu • 10 phút trước</span>
+          </div>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3 flex gap-3 items-center">
+          <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=300&auto=format&fit=crop" class="w-16 h-16 rounded-xl object-cover">
+          <div>
+            <p class="text-xs font-bold text-white">"Anh đang đi ăn trưa nè em yêu 🍜"</p>
+            <span class="text-[10px] text-slate-400">Bạn • Hôm nay, 12:30</span>
+          </div>
+        </div>
+      `;
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      const text = document.getElementById('toast-text');
+      text.innerText = msg;
+      toast.classList.remove('-translate-y-20', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+      setTimeout(() => {
+        toast.classList.add('-translate-y-20', 'opacity-0');
+        toast.classList.remove('translate-y-0', 'opacity-100');
+      }, 2800);
+    }
+
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW reg fail', err));
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadAppState();
+      lucide.createIcons();
+    });
+  </script>
+</body>
+</html>
