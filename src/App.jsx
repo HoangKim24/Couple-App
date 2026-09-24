@@ -1,43 +1,63 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Camera, Clock, LayoutGrid, Bell } from 'lucide-react';
+import { Camera, Clock, LayoutGrid, Bell, Settings } from 'lucide-react';
 import PasscodeGate from './components/PasscodeGate';
 import CoupleHeader from './components/CoupleHeader';
 import LocketWidget from './components/LocketWidget';
 import HabiBar from './components/HabiBar';
 import CameraModal from './components/CameraModal';
 import ScriptableModal from './components/ScriptableModal';
+import SettingsDrawer from './components/SettingsDrawer';
 import { getLocalState, saveLocalState } from './services/storage';
 import { sound } from './services/audio';
 import { publishLiveEvent, subscribeLiveEvents } from './services/firebase';
+import { savePhotoToDB, getAllPhotosFromDB } from './services/db';
 
 export default function App() {
   const [state, setState] = useState(getLocalState);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [isScriptableOpen, setIsScriptableOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [historyPhotos, setHistoryPhotos] = useState([]);
   const [toast, setToast] = useState(null);
   const [particles, setParticles] = useState([]);
   const [isShaking, setIsShaking] = useState(false);
   const toastTimeoutRef = useRef(null);
 
-  // Save changes to localStorage
+  // Save state to localStorage
   useEffect(() => {
     saveLocalState(state);
   }, [state]);
+
+  // Load photos from IndexedDB on startup
+  useEffect(() => {
+    getAllPhotosFromDB().then((photos) => {
+      if (photos && photos.length > 0) {
+        setHistoryPhotos(photos);
+      }
+    }).catch((e) => console.log('IndexedDB load error', e));
+  }, []);
 
   // Subscribe to real-time events from partner
   useEffect(() => {
     const unsubscribe = subscribeLiveEvents((event) => {
       if (event.type === 'LOCKET') {
+        const newLocket = event.payload;
         setState((prev) => ({
           ...prev,
-          latestLocket: event.payload
+          latestLocket: newLocket
         }));
+        // Lưu vào IndexedDB
+        savePhotoToDB({
+          id: Date.now(),
+          ...newLocket
+        });
+        setHistoryPhotos((prev) => [{ id: Date.now(), ...newLocket }, ...prev]);
         sound.play('kiss');
         showToast('🔔 Người yêu vừa gửi 1 ảnh Locket mới!');
         spawnKisses();
       } else if (event.type === 'HABI') {
-        const { reaction, from } = event;
+        const { reaction } = event;
         sound.play(reaction);
         if (reaction === 'kiss') {
           spawnKisses();
@@ -51,6 +71,12 @@ export default function App() {
         } else if (reaction === 'hug') {
           showToast('🫂 Người yêu vừa gửi cho bạn một cái ôm thật chặt!');
         }
+      } else if (event.type === 'SETTINGS') {
+        setState((prev) => ({
+          ...prev,
+          ...event.payload
+        }));
+        showToast('✨ Thông tin cặp đôi đã được cập nhật!');
       } else if (event.type === 'REACTION') {
         sound.play('heart');
         spawnHearts();
@@ -73,10 +99,10 @@ export default function App() {
       unlocked: true,
       myRole: role
     }));
-    showToast('Mở khóa thành công! Chào mừng hai bạn 💕');
+    showToast(`Mở khóa thành công! Chào mừng ${role === 'a' ? 'Bạn Trai' : 'Bạn Gái'} 💕`);
   };
 
-  const handleLocketSubmit = ({ photoUrl, caption }) => {
+  const handleLocketSubmit = async ({ photoUrl, caption }) => {
     const newLocket = {
       photoUrl,
       caption,
@@ -89,6 +115,14 @@ export default function App() {
       latestLocket: newLocket
     }));
 
+    // Lưu vĩnh viễn vào IndexedDB (không lo giới hạn 5MB)
+    const photoRecord = {
+      id: Date.now(),
+      ...newLocket
+    };
+    await savePhotoToDB(photoRecord).catch((e) => console.log('Save DB err', e));
+    setHistoryPhotos((prev) => [photoRecord, ...prev]);
+
     // Broadcast live event to partner
     publishLiveEvent({
       type: 'LOCKET',
@@ -96,6 +130,21 @@ export default function App() {
     });
 
     showToast('Đã gửi ảnh Locket! Màn hình người yêu đã cập nhật tức thì ✨');
+  };
+
+  const handleSaveSettings = (updatedFields) => {
+    setState((prev) => ({
+      ...prev,
+      ...updatedFields
+    }));
+
+    // Broadcast settings to partner
+    publishLiveEvent({
+      type: 'SETTINGS',
+      payload: updatedFields
+    });
+
+    showToast('Đã lưu thông tin thật thành công! 💕');
   };
 
   const handleHabiEmotion = (reaction) => {
@@ -164,11 +213,13 @@ export default function App() {
   return (
     <div className={`w-full max-w-md h-full flex flex-col justify-between relative px-4 py-2 overflow-hidden mx-auto ${isShaking ? 'animate-bounce' : ''}`}>
       
-      {/* Top Header */}
+      {/* Top Header with Dynamic Real Anniversary Date & Settings Trigger */}
       <CoupleHeader
         myRole={state.myRole}
         userA={state.userA}
         userB={state.userB}
+        anniversaryDate={state.anniversaryDate}
+        onOpenSettings={() => setIsSettingsOpen(true)}
       />
 
       {/* Main Locket Widget */}
@@ -185,7 +236,8 @@ export default function App() {
       <footer className="w-full flex items-center justify-between py-2 shrink-0 select-none">
         <button
           onClick={() => setIsHistoryOpen(true)}
-          className="w-11 h-11 rounded-2xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white flex items-center justify-center active:scale-90 transition"
+          title="Cuộn phim kỷ niệm"
+          className="w-11 h-11 rounded-2xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white flex items-center justify-center active:scale-90 transition shadow-md"
         >
           <Clock className="w-5 h-5" />
         </button>
@@ -200,10 +252,11 @@ export default function App() {
         </button>
 
         <button
-          onClick={() => setIsScriptableOpen(true)}
-          className="w-11 h-11 rounded-2xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white flex items-center justify-center active:scale-90 transition"
+          onClick={() => setIsSettingsOpen(true)}
+          title="Cài đặt thông tin"
+          className="w-11 h-11 rounded-2xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white flex items-center justify-center active:scale-90 transition shadow-md"
         >
-          <LayoutGrid className="w-5 h-5" />
+          <Settings className="w-5 h-5" />
         </button>
       </footer>
 
@@ -219,13 +272,20 @@ export default function App() {
         onClose={() => setIsScriptableOpen(false)}
       />
 
-      {/* History Roll Drawer */}
+      <SettingsDrawer
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        state={state}
+        onSaveSettings={handleSaveSettings}
+      />
+
+      {/* History Roll Drawer (IndexedDB Backed) */}
       {isHistoryOpen && (
         <div className="fixed inset-0 bg-slate-950/95 backdrop-blur-xl z-50 flex flex-col p-4 overflow-y-auto hide-scrollbar">
           <div className="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
             <h2 className="text-base font-bold text-white flex items-center gap-2">
               <Clock className="w-5 h-5 text-love-500" />
-              <span>Cuộn Phim Kỷ Niệm (Timeline)</span>
+              <span>Cuộn Phim Kỷ Niệm ({historyPhotos.length + 1} khoảnh khắc)</span>
             </h2>
             <button
               onClick={() => setIsHistoryOpen(false)}
@@ -236,13 +296,27 @@ export default function App() {
           </div>
 
           <div className="flex flex-col gap-3">
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-3 flex gap-3 items-center">
-              <img src={state.latestLocket.photoUrl} alt="History" className="w-16 h-16 rounded-xl object-cover" />
-              <div>
+            {/* Latest Locket */}
+            <div className="bg-slate-900 border border-love-500/30 rounded-2xl p-3 flex gap-3 items-center">
+              <img src={state.latestLocket.photoUrl} alt="History" className="w-16 h-16 rounded-xl object-cover shrink-0" />
+              <div className="flex-1">
                 <p className="text-xs font-bold text-white">"{state.latestLocket.caption}"</p>
-                <span className="text-[10px] text-slate-400">Vừa xong</span>
+                <span className="text-[10px] text-love-400 font-semibold block mt-0.5">Khoảnh khắc mới nhất</span>
               </div>
             </div>
+
+            {/* Past Photos from IndexedDB */}
+            {historyPhotos.map((item, idx) => (
+              <div key={item.id || idx} className="bg-slate-900/80 border border-slate-800 rounded-2xl p-3 flex gap-3 items-center">
+                <img src={item.photoUrl} alt="History item" className="w-16 h-16 rounded-xl object-cover shrink-0" />
+                <div className="flex-1">
+                  <p className="text-xs font-semibold text-slate-200">"{item.caption}"</p>
+                  <span className="text-[10px] text-slate-400 block mt-0.5">
+                    {new Date(item.timestamp).toLocaleDateString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
