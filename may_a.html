@@ -186,7 +186,7 @@
       </header>
 
       <!-- CENTER: LOCKET MAIN PHOTO WIDGET -->
-      <div id="locket-container" class="relative w-full aspect-square my-auto bg-slate-950 rounded-[32px] overflow-hidden border border-slate-800 shadow-2xl flex flex-col justify-end group cursor-pointer" onclick="openLocketModal()">
+      <div id="locket-container" class="relative w-full aspect-square my-auto bg-slate-950 rounded-[32px] overflow-hidden border border-slate-800 shadow-2xl flex flex-col justify-end group cursor-pointer" onclick="handleLocketWidgetClick(event)">
         <img id="locket-photo" src="" class="hidden absolute inset-0 w-full h-full object-cover select-none transition-all duration-500">
         
         <!-- Empty State khi chưa có ảnh -->
@@ -263,11 +263,19 @@
         </div>
       </div>
 
-      <!-- BIG LOCKET CAMERA BUTTON -->
-      <footer class="w-full flex items-center justify-center py-1">
-        <button onclick="openLocketModal()" class="flex items-center gap-2.5 bg-gradient-to-r from-sky-500 via-rose-500 to-love-600 text-white font-bold px-7 py-3.5 rounded-full shadow-lg shadow-love-600/30 hover:scale-105 active:scale-95 transition-all">
-          <i data-lucide="camera" class="w-5 h-5"></i>
-          <span class="text-sm tracking-wide">Chụp & Gửi Locket Cho Em</span>
+      <!-- FOOTER CONTROLS: LOCKET CAMERA & HISTORY TRIGGER -->
+      <footer class="w-full flex items-center justify-between py-1 px-1 select-none">
+        <button onclick="openHistoryModal()" title="Cuộn phim kỷ niệm Locket" class="w-12 h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-amber-300 hover:text-white flex items-center justify-center active:scale-90 transition shadow-md">
+          <i data-lucide="film" class="w-5 h-5"></i>
+        </button>
+
+        <button onclick="openLocketModal()" class="flex-1 mx-2 flex items-center justify-center gap-2 bg-gradient-to-r from-sky-500 via-rose-500 to-love-600 text-white font-bold py-3.5 rounded-full shadow-lg shadow-love-600/30 hover:scale-[1.02] active:scale-95 transition-all text-xs sm:text-sm">
+          <i data-lucide="camera" class="w-4 h-4"></i>
+          <span>Chụp & Gửi Locket Cho Em</span>
+        </button>
+
+        <button onclick="openHistoryModal()" title="Xem lịch sử ảnh" class="w-12 h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white flex items-center justify-center active:scale-90 transition shadow-md">
+          <i data-lucide="clock" class="w-5 h-5"></i>
         </button>
       </footer>
 
@@ -364,6 +372,79 @@
       <button id="btn-flip" onclick="toggleFlipCamera()" class="w-12 h-12 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 text-white flex items-center justify-center active:scale-90 transition shadow-md">
         <i data-lucide="refresh-cw" class="w-5 h-5"></i>
       </button>
+    </div>
+  </div>
+
+  <!-- LOCKET HISTORY MODAL (CUỘN PHIM KỶ NIỆM CHUẨN LOCKET) -->
+  <div id="history-modal" class="fixed inset-0 bg-black z-50 hidden flex-col justify-between overflow-hidden select-none p-4 sm:p-6">
+    <!-- Top Header -->
+    <div class="w-full max-w-sm mx-auto flex items-center justify-between border-b border-white/10 pb-3 pt-2">
+      <button onclick="closeHistoryModal()" class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white border border-white/15 flex items-center justify-center active:scale-90 transition">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <div class="text-center">
+        <h2 class="text-xs font-bold text-white tracking-wider font-display">CUỘN PHIM LOCKET</h2>
+        <span id="history-count-badge" class="text-[10px] text-amber-300 font-semibold">0 khoảnh khắc</span>
+      </div>
+
+      <!-- View Switcher: Feed / Grid -->
+      <div class="flex items-center bg-white/10 p-1 rounded-2xl border border-white/15">
+        <button id="btn-view-feed" onclick="switchHistoryView('feed')" class="p-1.5 rounded-xl bg-amber-400 text-slate-950 font-bold transition">
+          <i data-lucide="layout-list" class="w-4 h-4"></i>
+        </button>
+        <button id="btn-view-grid" onclick="switchHistoryView('grid')" class="p-1.5 rounded-xl text-slate-300 hover:text-white transition">
+          <i data-lucide="grid" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Scrollable Content -->
+    <div id="history-content" class="flex-1 overflow-y-auto hide-scrollbar w-full max-w-sm mx-auto py-4">
+      <!-- Injected via renderHistoryUI() -->
+    </div>
+
+    <!-- Full-screen Story Carousel Viewer (When clicking photo) -->
+    <div id="history-story-viewer" class="fixed inset-0 bg-black/95 z-[70] hidden flex-col justify-between items-center p-4">
+      <div class="w-full max-w-sm flex items-center justify-between pt-2">
+        <button onclick="closeStoryViewer()" class="w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center border border-white/15 active:scale-90 transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+        <span id="story-index-indicator" class="text-xs font-bold text-amber-300">1 / 1</span>
+        <div class="flex items-center gap-2">
+          <button id="btn-story-download" onclick="downloadCurrentStory()" class="w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center border border-white/15 active:scale-90 transition">
+            <i data-lucide="download" class="w-4 h-4"></i>
+          </button>
+          <button id="btn-story-delete" onclick="deleteCurrentStory()" class="w-10 h-10 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center border border-rose-500/30 active:scale-90 transition">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="relative w-full max-w-sm aspect-square bg-slate-950 rounded-[40px] overflow-hidden border-2 border-white/20 shadow-2xl flex items-center justify-center my-auto">
+        <img id="story-viewer-img" src="" class="w-full h-full object-cover">
+        <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/30 pointer-events-none"></div>
+        <div class="absolute top-4 inset-x-4 flex justify-between items-center pointer-events-none">
+          <span id="story-sender-tag" class="px-3 py-1 rounded-full bg-black/60 backdrop-blur-md text-white text-[11px] font-semibold border border-white/15"></span>
+          <span id="story-time-tag" class="px-3 py-1 rounded-full bg-black/60 backdrop-blur-md text-slate-300 text-[10px]"></span>
+        </div>
+        <div id="story-caption-box" class="absolute bottom-4 inset-x-4 flex justify-center">
+          <div id="story-caption-text" class="bg-black/65 backdrop-blur-md text-white text-xs sm:text-sm font-medium px-4 py-2.5 rounded-full border border-white/25 text-center max-w-[95%] shadow-lg"></div>
+        </div>
+      </div>
+
+      <div class="w-full max-w-sm pb-4 flex items-center justify-between px-6">
+        <button onclick="prevStory()" class="w-12 h-12 rounded-2xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center border border-white/15 active:scale-90 transition">
+          <i data-lucide="chevron-left" class="w-6 h-6"></i>
+        </button>
+        <button onclick="reactToCurrentStory('❤️')" class="px-6 py-3 rounded-full bg-gradient-to-r from-amber-400 to-yellow-400 text-slate-950 font-extrabold text-xs shadow-lg active:scale-95 transition flex items-center gap-1.5">
+          <span>❤️</span>
+          <span>Thả Tim</span>
+        </button>
+        <button onclick="nextStory()" class="w-12 h-12 rounded-2xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center border border-white/15 active:scale-90 transition">
+          <i data-lucide="chevron-right" class="w-6 h-6"></i>
+        </button>
+      </div>
     </div>
   </div>
 
@@ -634,8 +715,9 @@
         timestamp: Date.now()
       };
 
-      // Save to localStorage
+      // Save to localStorage & history
       localStorage.setItem('couple_shared_locket', JSON.stringify(locketData));
+      addLocketToHistory(locketData);
 
       // Broadcast to Máy B in real-time!
       channel.postMessage({
@@ -664,6 +746,272 @@
       document.getElementById('locket-caption').innerText = `"${data.caption || ''}"`;
       document.getElementById('locket-sender-tag').innerHTML = `<span class="w-2 h-2 rounded-full ${data.senderId === 'a' ? 'bg-sky-400' : 'bg-love-500'}"></span> ${data.senderId === 'a' ? 'Bạn' : 'Em'} vừa gửi`;
       document.getElementById('locket-time-tag').innerText = 'Vừa xong';
+    }
+
+    // --- LOCKET HISTORY / MOMENTS ROLL LOGIC ---
+    let historyViewMode = 'feed';
+    let activeStoryIndex = 0;
+
+    function getLocketHistory() {
+      try {
+        const raw = localStorage.getItem('couple_locket_history');
+        if (raw) return JSON.parse(raw);
+      } catch (e) {}
+      return [];
+    }
+
+    function saveLocketHistory(list) {
+      localStorage.setItem('couple_locket_history', JSON.stringify(list));
+    }
+
+    function addLocketToHistory(item) {
+      const list = getLocketHistory();
+      if (!list.some(x => x.photoUrl === item.photoUrl)) {
+        list.unshift(item);
+        saveLocketHistory(list);
+      }
+    }
+
+    function handleLocketWidgetClick(event) {
+      if (event.target.closest('button')) return;
+      const current = localStorage.getItem('couple_shared_locket');
+      if (current) {
+        openHistoryModal();
+      } else {
+        openLocketModal();
+      }
+    }
+
+    function openHistoryModal() {
+      playSfx('tap');
+      document.getElementById('history-modal').classList.remove('hidden');
+      document.getElementById('history-modal').classList.add('flex');
+      renderHistoryUI();
+      lucide.createIcons();
+    }
+
+    function closeHistoryModal() {
+      document.getElementById('history-modal').classList.add('hidden');
+      document.getElementById('history-modal').classList.remove('flex');
+    }
+
+    function switchHistoryView(mode) {
+      playSfx('tap');
+      historyViewMode = mode;
+      document.getElementById('btn-view-feed').className = mode === 'feed'
+        ? 'p-1.5 rounded-xl bg-amber-400 text-slate-950 font-bold transition'
+        : 'p-1.5 rounded-xl text-slate-300 hover:text-white transition';
+      document.getElementById('btn-view-grid').className = mode === 'grid'
+        ? 'p-1.5 rounded-xl bg-amber-400 text-slate-950 font-bold transition'
+        : 'p-1.5 rounded-xl text-slate-300 hover:text-white transition';
+      renderHistoryUI();
+      lucide.createIcons();
+    }
+
+    function renderHistoryUI() {
+      const container = document.getElementById('history-content');
+      const list = getLocketHistory();
+      document.getElementById('history-count-badge').innerText = `${list.length} khoảnh khắc`;
+
+      if (list.length === 0) {
+        container.innerHTML = `
+          <div class="h-full flex flex-col items-center justify-center text-center p-6 gap-3 mt-12">
+            <div class="w-16 h-16 rounded-3xl bg-amber-400/10 text-amber-400 border border-amber-400/20 flex items-center justify-center shadow-lg">
+              <i data-lucide="camera" class="w-8 h-8"></i>
+            </div>
+            <h3 class="text-sm font-bold text-white font-display">Chưa Có Kỷ Niệm Nào</h3>
+            <p class="text-xs text-slate-400 max-w-[220px]">Chụp và gửi ảnh Locket cho nhau để lưu giữ cuộn phim kỷ niệm tại đây!</p>
+            <button onclick="closeHistoryModal(); openLocketModal();" class="mt-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-400 text-slate-950 font-extrabold text-xs shadow-lg active:scale-95 transition flex items-center gap-1.5">
+              <i data-lucide="camera" class="w-4 h-4"></i>
+              <span>Chụp Ảnh Đầu Tiên</span>
+            </button>
+          </div>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      if (historyViewMode === 'feed') {
+        container.innerHTML = `
+          <div class="flex flex-col gap-6 pb-6">
+            ${list.map((item, idx) => `
+              <div class="bg-slate-950/80 border border-white/10 rounded-[32px] overflow-hidden p-3 shadow-xl flex flex-col gap-2.5">
+                <div class="flex items-center justify-between px-2 pt-1 text-xs">
+                  <span class="font-bold text-white flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full ${item.senderId === 'a' ? 'bg-sky-400' : 'bg-love-500'}"></span>
+                    ${item.senderName || (item.senderId === 'a' ? 'Bạn' : 'Em')}
+                  </span>
+                  <span class="text-[10px] text-slate-400">${formatTimestamp(item.timestamp)}</span>
+                </div>
+
+                <div onclick="openStoryViewer(${idx})" class="relative w-full aspect-square bg-slate-900 rounded-[24px] overflow-hidden cursor-pointer shadow-lg group">
+                  <img src="${item.photoUrl}" class="w-full h-full object-cover transition-transform group-hover:scale-105">
+                  <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20 pointer-events-none"></div>
+                  ${item.caption ? `
+                    <div class="absolute bottom-3 inset-x-3 flex justify-center">
+                      <div class="bg-black/60 backdrop-blur-md text-white text-xs font-medium px-3.5 py-1.5 rounded-full border border-white/20 text-center max-w-[95%] truncate shadow-lg">
+                        "${item.caption}"
+                      </div>
+                    </div>
+                  ` : ''}
+                </div>
+
+                <div class="flex items-center justify-between px-2 pt-1">
+                  <div class="flex items-center gap-1">
+                    ${['❤️', '💋', '🥰', '🫂'].map(emoji => `
+                      <button onclick="sendQuickReaction('${emoji}')" class="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 active:scale-90 transition flex items-center justify-center text-xs">
+                        ${emoji}
+                      </button>
+                    `).join('')}
+                  </div>
+
+                  <div class="flex items-center gap-2">
+                    <button onclick="downloadPhoto('${item.photoUrl}', ${item.timestamp})" title="Tải về máy" class="w-8 h-8 rounded-full bg-white/10 text-slate-300 hover:text-white flex items-center justify-center active:scale-90 transition">
+                      <i data-lucide="download" class="w-4 h-4"></i>
+                    </button>
+                    <button onclick="deletePhotoFromHistory(${idx})" title="Xóa" class="w-8 h-8 rounded-full bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 flex items-center justify-center active:scale-90 transition">
+                      <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      } else {
+        // Grid View
+        container.innerHTML = `
+          <div class="grid grid-cols-3 gap-2 pb-6">
+            ${list.map((item, idx) => `
+              <div onclick="openStoryViewer(${idx})" class="relative aspect-square rounded-2xl overflow-hidden cursor-pointer bg-slate-900 border border-white/10 group shadow-md">
+                <img src="${item.photoUrl}" class="w-full h-full object-cover transition-transform group-hover:scale-110">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-1.5">
+                  <span class="text-[9px] text-white truncate">${item.caption || formatTimestamp(item.timestamp)}</span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }
+      lucide.createIcons();
+    }
+
+    function openStoryViewer(idx) {
+      const list = getLocketHistory();
+      if (!list[idx]) return;
+      playSfx('tap');
+      activeStoryIndex = idx;
+      const item = list[idx];
+
+      document.getElementById('story-index-indicator').innerText = `${idx + 1} / ${list.length}`;
+      document.getElementById('story-viewer-img').src = item.photoUrl;
+      document.getElementById('story-sender-tag').innerText = item.senderName ? `${item.senderName} gửi` : 'Locket';
+      document.getElementById('story-time-tag').innerText = formatTimestamp(item.timestamp);
+      document.getElementById('story-caption-text').innerText = item.caption ? `"${item.caption}"` : '';
+      if (!item.caption) {
+        document.getElementById('story-caption-box').classList.add('hidden');
+      } else {
+        document.getElementById('story-caption-box').classList.remove('hidden');
+      }
+
+      document.getElementById('history-story-viewer').classList.remove('hidden');
+      document.getElementById('history-story-viewer').classList.add('flex');
+      lucide.createIcons();
+    }
+
+    function closeStoryViewer() {
+      document.getElementById('history-story-viewer').classList.add('hidden');
+      document.getElementById('history-story-viewer').classList.remove('flex');
+    }
+
+    function nextStory() {
+      const list = getLocketHistory();
+      if (activeStoryIndex < list.length - 1) {
+        openStoryViewer(activeStoryIndex + 1);
+      }
+    }
+
+    function prevStory() {
+      if (activeStoryIndex > 0) {
+        openStoryViewer(activeStoryIndex - 1);
+      }
+    }
+
+    function downloadCurrentStory() {
+      const list = getLocketHistory();
+      const item = list[activeStoryIndex];
+      if (item) downloadPhoto(item.photoUrl, item.timestamp);
+    }
+
+    function deleteCurrentStory() {
+      if (confirm('Bạn có chắc muốn xóa khoảnh khắc kỷ niệm này?')) {
+        deletePhotoFromHistory(activeStoryIndex);
+        closeStoryViewer();
+      }
+    }
+
+    function downloadPhoto(url, timestamp) {
+      playSfx('tap');
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `locket-${timestamp || Date.now()}.jpg`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      showToast('Đang tải ảnh về máy... 📥');
+    }
+
+    function deletePhotoFromHistory(idx) {
+      const list = getLocketHistory();
+      const item = list[idx];
+      if (!item) return;
+
+      list.splice(idx, 1);
+      saveLocketHistory(list);
+
+      // Broadcast xóa qua máy người yêu
+      channel.postMessage({
+        type: 'DELETE_LOCKET_ITEM',
+        timestamp: item.timestamp
+      });
+
+      // Nếu xóa đúng ảnh đang hiển thị ngoài màn hình chính
+      const currentShared = localStorage.getItem('couple_shared_locket');
+      if (currentShared) {
+        try {
+          const cur = JSON.parse(currentShared);
+          if (cur.timestamp === item.timestamp) {
+            if (list.length > 0) {
+              localStorage.setItem('couple_shared_locket', JSON.stringify(list[0]));
+              updateLocketUI(list[0]);
+            } else {
+              localStorage.removeItem('couple_shared_locket');
+              resetLocketToEmpty();
+            }
+          }
+        } catch(e) {}
+      }
+
+      showToast('Đã xóa khoảnh khắc');
+      renderHistoryUI();
+    }
+
+    function formatTimestamp(ts) {
+      if (!ts) return 'Vừa xong';
+      const d = new Date(ts);
+      const now = new Date();
+      const isToday = d.toDateString() === now.toDateString();
+      const time = d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+      if (isToday) return `Hôm nay • ${time}`;
+      return `${d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })} • ${time}`;
+    }
+
+    function resetLocketToEmpty() {
+      document.getElementById('locket-photo').classList.add('hidden');
+      document.getElementById('locket-overlay').classList.add('hidden');
+      document.getElementById('locket-header-badges').classList.add('hidden');
+      document.getElementById('locket-caption-box').classList.add('hidden');
+      document.getElementById('locket-empty-state').classList.remove('hidden');
     }
 
     // Habi Actions
@@ -749,9 +1097,19 @@
 
       if (msg.type === 'NEW_LOCKET') {
         updateLocketUI(msg.payload);
+        addLocketToHistory(msg.payload);
+        if (!document.getElementById('history-modal').classList.contains('hidden')) {
+          renderHistoryUI();
+        }
         playSfx('kiss');
         showToast('🔔 Em vừa gửi 1 ảnh Locket mới!');
         showKisses();
+      } else if (msg.type === 'DELETE_LOCKET_ITEM') {
+        const list = getLocketHistory().filter(x => x.timestamp !== msg.timestamp);
+        saveLocketHistory(list);
+        if (!document.getElementById('history-modal').classList.contains('hidden')) {
+          renderHistoryUI();
+        }
       } else if (msg.type === 'HABI_REACTION' && msg.from === 'b') {
         playSfx(msg.reaction);
         showLocalEffect(msg.reaction);

@@ -2,7 +2,7 @@ import React from 'react';
 import { Camera, Sparkles, Heart } from 'lucide-react';
 import { sound } from '../services/audio';
 
-export default function LocketWidget({ locket, myRole, onReaction, onOpenCapture }) {
+export default function LocketWidget({ locket, myRole, onReaction, onOpenCapture, onOpenHistory }) {
   const isSenderMe = locket && locket.senderId === myRole;
 
   const handleQuickReact = (emoji) => {
@@ -36,9 +36,16 @@ export default function LocketWidget({ locket, myRole, onReaction, onOpenCapture
     );
   }
 
-  // Khi đã có ảnh thật do 1 trong 2 người gửi
+  // Khi đã có ảnh thật do 1 trong 2 người gửi -> Chạm để xem lại ảnh chuẩn Locket
   return (
-    <div className="relative w-full aspect-square my-auto bg-slate-900 rounded-[32px] overflow-hidden border border-slate-800 shadow-2xl flex flex-col justify-end group select-none">
+    <div
+      onClick={(e) => {
+        if (e.target.closest('button')) return;
+        if (onOpenHistory) onOpenHistory();
+      }}
+      title="Chạm để xem lại cuộn phim Locket"
+      className="relative w-full aspect-square my-auto bg-slate-900 rounded-[32px] overflow-hidden border border-slate-800 shadow-2xl flex flex-col justify-end group select-none cursor-pointer"
+    >
       <img
         src={locket.photoUrl}
         alt="Locket Moment"

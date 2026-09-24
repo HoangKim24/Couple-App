@@ -54,3 +54,14 @@ export async function getAllPhotosFromDB() {
     req.onerror = () => reject(req.error);
   });
 }
+
+export async function deletePhotoFromDB(id) {
+  const db = await openDatabase();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction([STORE_PHOTOS], 'readwrite');
+    const store = tx.objectStore(STORE_PHOTOS);
+    const req = store.delete(id);
+    req.onsuccess = () => resolve(true);
+    req.onerror = () => reject(req.error);
+  });
+}

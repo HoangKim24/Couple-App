@@ -5,12 +5,13 @@ import CoupleHeader from './components/CoupleHeader';
 import LocketWidget from './components/LocketWidget';
 import HabiBar from './components/HabiBar';
 import LocketCamera from './components/LocketCamera';
+import LocketHistory from './components/LocketHistory';
 import ScriptableModal from './components/ScriptableModal';
 import SettingsDrawer from './components/SettingsDrawer';
 import { getLocalState, saveLocalState } from './services/storage';
 import { sound } from './services/audio';
 import { publishLiveEvent, subscribeLiveEvents } from './services/firebase';
-import { savePhotoToDB, getAllPhotosFromDB } from './services/db';
+import { savePhotoToDB, getAllPhotosFromDB, deletePhotoFromDB } from './services/db';
 
 export default function App() {
   const [state, setState] = useState(getLocalState);
@@ -201,6 +202,29 @@ export default function App() {
     }, 2500);
   };
 
+  const handleDeleteHistoryPhoto = async (id) => {
+    try {
+      await deletePhotoFromDB(id);
+      setHistoryPhotos((prev) => prev.filter((p) => p.id !== id));
+      if (state.latestLocket?.id === id || state.latestLocket?.timestamp === id) {
+        setState((prev) => ({ ...prev, latestLocket: null }));
+      }
+      showToast('Đã xóa khoảnh khắc');
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleReactHistoryPhoto = (id, emoji) => {
+    showToast(`Đã thả ${emoji} vào kỷ niệm`);
+    spawnKisses();
+    publishLiveEvent({
+      type: 'HABI',
+      reaction: 'heart',
+      emoji: emoji
+    });
+  };
+
   const triggerShake = () => {
     setIsShaking(true);
     setTimeout(() => setIsShaking(false), 700);
@@ -209,6 +233,12 @@ export default function App() {
   if (!state.unlocked) {
     return <PasscodeGate onUnlock={handleUnlock} />;
   }
+
+  // Tổng hợp tất cả ảnh Locket để xem cuộn phim chuẩn Locket
+  const allHistoryPhotos = [
+    ...(state.latestLocket ? [{ id: state.latestLocket.id || state.latestLocket.timestamp || 'latest', ...state.latestLocket }] : []),
+    ...historyPhotos.filter((h) => h.photoUrl !== state.latestLocket?.photoUrl)
+  ];
 
   return (
     <div className={`w-full max-w-md h-full flex flex-col justify-between relative px-4 py-2 overflow-hidden mx-auto ${isShaking ? 'animate-bounce' : ''}`}>
@@ -228,6 +258,7 @@ export default function App() {
         myRole={state.myRole}
         onReaction={handleQuickReaction}
         onOpenCapture={() => setIsCameraOpen(true)}
+        onOpenHistory={() => setIsHistoryOpen(true)}
       />
 
       {/* Habi 1-Tap Bar */}
@@ -237,7 +268,7 @@ export default function App() {
       <footer className="w-full flex items-center justify-between py-2 shrink-0 select-none">
         <button
           onClick={() => setIsHistoryOpen(true)}
-          title="Cuộn phim kỷ niệm"
+          title="Cuộn phim kỷ niệm Locket"
           className="w-11 h-11 rounded-2xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white flex items-center justify-center active:scale-90 transition shadow-md"
         >
           <Clock className="w-5 h-5" />
@@ -281,47 +312,15 @@ export default function App() {
         onSaveSettings={handleSaveSettings}
       />
 
-      {/* History Roll Drawer (IndexedDB Backed) */}
-      {isHistoryOpen && (
-        <div className="fixed inset-0 bg-slate-950/95 backdrop-blur-xl z-50 flex flex-col p-4 overflow-y-auto hide-scrollbar">
-          <div className="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
-            <h2 className="text-base font-bold text-white flex items-center gap-2">
-              <Clock className="w-5 h-5 text-love-500" />
-              <span>Cuộn Phim Kỷ Niệm ({historyPhotos.length + 1} khoảnh khắc)</span>
-            </h2>
-            <button
-              onClick={() => setIsHistoryOpen(false)}
-              className="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center"
-            >
-              ✕
-            </button>
-          </div>
-
-          <div className="flex flex-col gap-3">
-            {/* Latest Locket */}
-            <div className="bg-slate-900 border border-love-500/30 rounded-2xl p-3 flex gap-3 items-center">
-              <img src={state.latestLocket.photoUrl} alt="History" className="w-16 h-16 rounded-xl object-cover shrink-0" />
-              <div className="flex-1">
-                <p className="text-xs font-bold text-white">"{state.latestLocket.caption}"</p>
-                <span className="text-[10px] text-love-400 font-semibold block mt-0.5">Khoảnh khắc mới nhất</span>
-              </div>
-            </div>
-
-            {/* Past Photos from IndexedDB */}
-            {historyPhotos.map((item, idx) => (
-              <div key={item.id || idx} className="bg-slate-900/80 border border-slate-800 rounded-2xl p-3 flex gap-3 items-center">
-                <img src={item.photoUrl} alt="History item" className="w-16 h-16 rounded-xl object-cover shrink-0" />
-                <div className="flex-1">
-                  <p className="text-xs font-semibold text-slate-200">"{item.caption}"</p>
-                  <span className="text-[10px] text-slate-400 block mt-0.5">
-                    {new Date(item.timestamp).toLocaleDateString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Authentic Locket Photo Review & Moments Roll */}
+      <LocketHistory
+        isOpen={isHistoryOpen}
+        onClose={() => setIsHistoryOpen(false)}
+        photos={allHistoryPhotos}
+        onDeletePhoto={handleDeleteHistoryPhoto}
+        onReactPhoto={handleReactHistoryPhoto}
+        onOpenCamera={() => setIsCameraOpen(true)}
+      />
 
       {/* Particles Layer */}
       <div className="absolute inset-0 pointer-events-none z-50 overflow-hidden">
