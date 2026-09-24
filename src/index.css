@@ -1,0 +1,57 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+}
+
+body {
+  margin: 0;
+  padding-top: var(--sat);
+  padding-bottom: var(--sab);
+  background-color: #020617;
+  color: #f8fafc;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  overscroll-behavior-y: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Kiss animation */
+.kiss-burst-anim {
+  position: absolute;
+  pointer-events: none;
+  font-size: 3.5rem;
+  animation: kissAnim 1.2s cubic-bezier(0.1, 0.8, 0.2, 1) forwards;
+  z-index: 999;
+}
+
+@keyframes kissAnim {
+  0% { transform: scale(0.2) rotate(-15deg); opacity: 0; }
+  30% { transform: scale(1.3) rotate(5deg); opacity: 1; }
+  70% { transform: scale(1.1) rotate(-5deg); opacity: 0.9; }
+  100% { transform: scale(1.5) translateY(-50px); opacity: 0; }
+}
+
+/* Heart particles */
+.heart-float-anim {
+  position: absolute;
+  pointer-events: none;
+  animation: heartFloat 2.5s ease-out forwards;
+  z-index: 998;
+}
+
+@keyframes heartFloat {
+  0% { transform: translateY(0) scale(0.6); opacity: 1; }
+  100% { transform: translateY(-450px) scale(1.4) rotate(45deg); opacity: 0; }
+}
