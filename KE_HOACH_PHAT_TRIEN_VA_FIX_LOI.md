@@ -112,6 +112,6 @@ graph TD
 
 | Hạng mục công việc | Độ ưu tiên | Thời gian hoàn thành | Trạng thái |
 | :--- | :---: | :---: | :---: |
-| **Giai đoạn 1: Fix toàn bộ hạt sạn & Lưu ảnh Cloud** | 🔥 Khẩn cấp | 1 - 2 phiên làm việc | **Sẵn sàng triển khai** |
-| **Giai đoạn 2: Tính năng Voice Note & % Pin đối phương** | ⭐ Rất cao | 1 phiên làm việc | Đang chờ duyệt |
-| **Giai đoạn 3: Deploy Vercel HTTPS & Cài đặt 2 máy** | 🚀 Hoàn thiện | 15 - 30 phút | Đang chờ duyệt |
+| **Giai đoạn 1: Fix toàn bộ hạt sạn & Lưu ảnh Cloud & Font tiếng Việt** | 🔥 Khẩn cấp | 1 - 2 phiên làm việc | **✅ ĐÃ HOÀN THÀNH (100%)** |
+| **Giai đoạn 2: Voice Note Locket 5s & Live % Pin đối phương** | ⭐ Rất cao | 1 phiên làm việc | **✅ ĐÃ HOÀN THÀNH (100%)** |
+| **Giai đoạn 3: Deploy Vercel/Netlify HTTPS & Cài đặt 2 máy PWA** | 🚀 Hoàn thiện | 15 - 30 phút | **Sẵn sàng triển khai** |
