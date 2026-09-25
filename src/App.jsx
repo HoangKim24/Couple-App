@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Camera, Clock, LayoutGrid, Bell, Settings } from 'lucide-react';
+import { Camera, Clock, LayoutGrid, Settings } from 'lucide-react';
 import PasscodeGate from './components/PasscodeGate';
 import CoupleHeader from './components/CoupleHeader';
 import LocketWidget from './components/LocketWidget';
@@ -8,11 +8,13 @@ import LocketCamera from './components/LocketCamera';
 import LocketHistory from './components/LocketHistory';
 import ScriptableModal from './components/ScriptableModal';
 import SettingsDrawer from './components/SettingsDrawer';
+import NotificationBanner from './components/NotificationBanner';
 import { getLocalState, saveLocalState } from './services/storage';
 import { sound } from './services/audio';
 import { publishLiveEvent, subscribeLiveEvents, getRecentPhotosFromCloud } from './services/firebase';
 import { savePhotoToDB, getAllPhotosFromDB, deletePhotoFromDB } from './services/db';
 import { initBatteryMonitoring } from './services/battery';
+import { fireHeartConfetti, fireSparkleCelebration } from './services/fx';
 
 export default function App() {
   const [state, setState] = useState(getLocalState);
@@ -21,13 +23,18 @@ export default function App() {
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [historyPhotos, setHistoryPhotos] = useState([]);
-  const [toast, setToast] = useState(null);
+  const [notification, setNotification] = useState(null);
   const [particles, setParticles] = useState([]);
   const [isShaking, setIsShaking] = useState(false);
   const [inAppDismissed, setInAppDismissed] = useState(false);
   const [myBattery, setMyBattery] = useState(null);
   const [partnerBattery, setPartnerBattery] = useState(null);
   const toastTimeoutRef = useRef(null);
+  const stateRef = useRef(state);
+
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
 
   const isInApp = typeof window !== 'undefined' && /FBAN|FBAV|Instagram|Line|KAKAOTALK|Zalo|MicroMessenger|Snapchat/i.test(navigator.userAgent || '');
 
@@ -96,6 +103,11 @@ export default function App() {
   // Subscribe to real-time events from partner
   useEffect(() => {
     const unsubscribe = subscribeLiveEvents((event) => {
+      const currentState = stateRef.current;
+      const partner = currentState.myRole === 'a' ? currentState.userB : currentState.userA;
+      const partnerName = partner?.name || (currentState.myRole === 'a' ? 'Người Yêu' : 'Bạn');
+      const partnerAvatar = partner?.avatar;
+
       if (event.type === 'LOCKET') {
         const newLocket = event.payload;
         setState((prev) => ({
@@ -109,33 +121,79 @@ export default function App() {
         });
         setHistoryPhotos((prev) => [{ id: Date.now(), ...newLocket }, ...prev]);
         sound.play('kiss');
-        showToast('🔔 Người yêu vừa gửi 1 ảnh Locket mới!');
+        fireSparkleCelebration();
         spawnKisses();
+        showNotification({
+          type: 'locket',
+          title: `${partnerName} vừa gửi Locket`,
+          message: newLocket.caption || 'Một khoảnh khắc mới toanh vừa gửi đến bạn ✨',
+          avatar: partnerAvatar,
+          photoUrl: newLocket.photoUrl,
+          icon: '📸',
+          duration: 4500
+        });
       } else if (event.type === 'HABI') {
         const { reaction } = event;
         sound.play(reaction);
         if (reaction === 'kiss') {
           spawnKisses();
-          showToast('💋 Người yêu gửi cho bạn một nụ hôn nồng cháy!');
+          fireHeartConfetti();
+          showNotification({
+            type: 'kiss',
+            title: `${partnerName} gửi nụ hôn`,
+            message: 'Gửi bạn ngàn nụ hôn nồng cháy moah moah 💋',
+            avatar: partnerAvatar,
+            icon: '💋'
+          });
         } else if (reaction === 'heart') {
           spawnHearts();
-          showToast('❤️ Người yêu thả mưa tim nhớ bạn quá chừng!');
+          fireHeartConfetti();
+          showNotification({
+            type: 'heart',
+            title: `${partnerName} nhớ bạn quá`,
+            message: 'Thả cơn mưa tim đắm say nhớ nhung ❤️',
+            avatar: partnerAvatar,
+            icon: '❤️'
+          });
         } else if (reaction === 'pout') {
           triggerShake();
-          showToast('😤 Người yêu đang dỗi hờn nè, dỗ mau!');
+          showNotification({
+            type: 'pout',
+            title: `${partnerName} đang dỗi hờn`,
+            message: 'Đang phụng phịu rồi kìa, mau dỗ dành đi nha! 😤',
+            avatar: partnerAvatar,
+            icon: '😤'
+          });
         } else if (reaction === 'hug') {
-          showToast('🫂 Người yêu vừa gửi cho bạn một cái ôm thật chặt!');
+          showNotification({
+            type: 'hug',
+            title: `${partnerName} ôm bạn thật chặt`,
+            message: 'Gửi một cái ôm ấm áp và tràn ngập tình yêu 🫂',
+            avatar: partnerAvatar,
+            icon: '🫂'
+          });
         }
       } else if (event.type === 'SETTINGS') {
         setState((prev) => ({
           ...prev,
           ...event.payload
         }));
-        showToast('✨ Thông tin cặp đôi đã được cập nhật!');
+        showNotification({
+          type: 'default',
+          title: 'Cập nhật thành công',
+          message: 'Thông tin cặp đôi và ngày kỷ niệm đã đồng bộ tức thì ✨',
+          icon: '✨'
+        });
       } else if (event.type === 'REACTION') {
         sound.play('heart');
         spawnHearts();
-        showToast(`Người yêu vừa thả ${event.emoji} lên ảnh của bạn!`);
+        showNotification({
+          type: 'heart',
+          title: `${partnerName} thả cảm xúc`,
+          message: `Đã thả ${event.emoji} vào khoảnh khắc của bạn!`,
+          avatar: partnerAvatar,
+          icon: event.emoji || '❤️'
+        });
       } else if (event.type === 'DELETE_PHOTO') {
         const photoId = String(event.id);
         deletePhotoFromDB(photoId).catch(() => {});
@@ -147,9 +205,19 @@ export default function App() {
           return prev;
         });
       } else if (event.type === 'BATTERY') {
-        const partnerRole = state.myRole === 'a' ? 'b' : 'a';
+        const partnerRole = currentState.myRole === 'a' ? 'b' : 'a';
         if (event.battery && event.battery[partnerRole]) {
-          setPartnerBattery(event.battery[partnerRole]);
+          const bat = event.battery[partnerRole];
+          setPartnerBattery(bat);
+          if (bat.level !== undefined && bat.level <= 20 && !bat.charging) {
+            showNotification({
+              type: 'battery',
+              title: 'Pin người yêu sắp hết 🪫',
+              message: `${partnerName} chỉ còn ${bat.level}% pin, nhớ nhắc sạc pin nhé!`,
+              icon: '⚡',
+              duration: 4500
+            });
+          }
         }
       }
     });
@@ -157,10 +225,12 @@ export default function App() {
     return () => unsubscribe();
   }, [state.myRole]);
 
-  const showToast = (message) => {
+  const showNotification = (notif) => {
     if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
-    setToast(message);
-    toastTimeoutRef.current = setTimeout(() => setToast(null), 3000);
+    setNotification(notif);
+    toastTimeoutRef.current = setTimeout(() => {
+      setNotification(null);
+    }, notif.duration || 3800);
   };
 
   const handleUnlock = (role) => {
@@ -169,7 +239,12 @@ export default function App() {
       unlocked: true,
       myRole: role
     }));
-    showToast('Mở khóa thành công! Chào mừng bạn 💕');
+    showNotification({
+      type: 'default',
+      title: 'Mở khóa thành công',
+      message: 'Chào mừng bạn trở lại không gian tình yêu 💕',
+      icon: '🔓'
+    });
   };
 
   const handleLocketSubmit = async ({ photoUrl, caption, audioUrl, audioDuration }) => {
@@ -201,7 +276,14 @@ export default function App() {
       payload: newLocket
     });
 
-    showToast('Đã gửi ảnh Locket! Màn hình người yêu đã cập nhật tức thì ✨');
+    fireSparkleCelebration();
+    showNotification({
+      type: 'locket',
+      title: 'Đã gửi Locket thành công! ✨',
+      message: 'Khoảnh khắc vừa được chia sẻ tới màn hình người yêu.',
+      photoUrl: photoUrl,
+      icon: '📸'
+    });
   };
 
   const handleSaveSettings = (updatedFields) => {
@@ -216,14 +298,25 @@ export default function App() {
       payload: updatedFields
     });
 
-    showToast('Đã lưu thông tin thật thành công! 💕');
+    showNotification({
+      type: 'default',
+      title: 'Đã lưu cài đặt',
+      message: 'Thông tin và ngày kỷ niệm đã đồng bộ thành công! 💕',
+      icon: '✨'
+    });
   };
 
   const handleHabiEmotion = (reaction) => {
     sound.play(reaction);
-    if (reaction === 'kiss') spawnKisses();
-    else if (reaction === 'heart') spawnHearts();
-    else if (reaction === 'pout') triggerShake();
+    if (reaction === 'kiss') {
+      spawnKisses();
+      fireHeartConfetti();
+    } else if (reaction === 'heart') {
+      spawnHearts();
+      fireHeartConfetti();
+    } else if (reaction === 'pout') {
+      triggerShake();
+    }
 
     // Broadcast live event to partner
     publishLiveEvent({
@@ -232,17 +325,37 @@ export default function App() {
       reaction
     });
 
-    showToast(`Đã gửi cảm xúc ${reaction === 'kiss' ? 'nụ hôn 💋' : reaction === 'heart' ? 'mưa tim ❤️' : reaction === 'pout' ? 'dỗi hờn 😤' : 'ôm 🫂'}!`);
+    const emotionMap = {
+      kiss: { name: 'nụ hôn nồng cháy 💋', icon: '💋' },
+      heart: { name: 'mưa tim đong đầy ❤️', icon: '❤️' },
+      pout: { name: 'dỗi hờn đáng yêu 😤', icon: '😤' },
+      hug: { name: 'cái ôm thật chặt 🫂', icon: '🫂' }
+    };
+
+    showNotification({
+      type: reaction,
+      title: 'Đã gửi cảm xúc',
+      message: `Đã gửi ${emotionMap[reaction]?.name || reaction} đến người yêu!`,
+      icon: emotionMap[reaction]?.icon || '✨'
+    });
   };
 
   const handleQuickReaction = (emoji) => {
     spawnHearts();
+    fireHeartConfetti();
     publishLiveEvent({
       type: 'REACTION',
       from: state.myRole,
       emoji
     });
-    showToast(`Đã thả ${emoji} lên ảnh của người yêu!`);
+    const partner = state.myRole === 'a' ? state.userB : state.userA;
+    const partnerName = partner?.name || (state.myRole === 'a' ? 'Người Yêu' : 'Bạn');
+    showNotification({
+      type: 'heart',
+      title: 'Đã thả cảm xúc',
+      message: `Đã thả ${emoji} lên ảnh của ${partnerName}!`,
+      icon: emoji
+    });
   };
 
   const spawnKisses = () => {
@@ -286,19 +399,30 @@ export default function App() {
         type: 'DELETE_PHOTO',
         id: photoId
       });
-      showToast('Đã xóa khoảnh khắc');
+      showNotification({
+        type: 'default',
+        title: 'Đã xóa khoảnh khắc',
+        message: 'Khoảnh khắc đã được xóa khỏi cuộn phim của 2 bạn.',
+        icon: '🗑️'
+      });
     } catch (e) {
       console.error(e);
     }
   };
 
   const handleReactHistoryPhoto = (id, emoji) => {
-    showToast(`Đã thả ${emoji} vào kỷ niệm`);
-    spawnKisses();
+    spawnHearts();
+    fireHeartConfetti();
     publishLiveEvent({
       type: 'HABI',
       reaction: 'heart',
       emoji: emoji
+    });
+    showNotification({
+      type: 'heart',
+      title: 'Đã thả cảm xúc',
+      message: `Đã thả ${emoji} vào kỷ niệm của 2 bạn!`,
+      icon: emoji
     });
   };
 
@@ -427,13 +551,17 @@ export default function App() {
         })}
       </div>
 
-      {/* Toast Alert */}
-      {toast && (
-        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] bg-slate-900 border border-love-500/50 text-white text-xs font-semibold px-4 py-2.5 rounded-full shadow-2xl flex items-center gap-2 backdrop-blur-md animate-bounce">
-          <Bell className="w-4 h-4 text-love-400" />
-          <span>{toast}</span>
-        </div>
-      )}
+      {/* Luxury Dynamic Island Notification Banner */}
+      <NotificationBanner
+        notification={notification}
+        onClose={() => setNotification(null)}
+        onClick={(notif) => {
+          if (notif?.type === 'locket') {
+            setIsHistoryOpen(true);
+          }
+          setNotification(null);
+        }}
+      />
     </div>
   );
 }

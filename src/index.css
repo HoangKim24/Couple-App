@@ -58,3 +58,27 @@ body {
   0% { transform: translateY(0) scale(0.6); opacity: 1; }
   100% { transform: translateY(-450px) scale(1.4) rotate(45deg); opacity: 0; }
 }
+
+/* Notification drain progress animation */
+@keyframes notificationProgress {
+  0% { width: 100%; }
+  100% { width: 0%; }
+}
+
+.notification-progress-anim {
+  animation: notificationProgress 3.8s linear forwards;
+}
+
+/* 0ms touch latency on mobile iOS/Android */
+button, a, input, [role="button"] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Smooth rubber-band spring feel on interactive controls */
+.active-spring {
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.active-spring:active {
+  transform: scale(0.94);
+}

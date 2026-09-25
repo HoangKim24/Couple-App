@@ -19,9 +19,15 @@ export default function LocketCamera({ isOpen, onClose, onSubmit, partnerName = 
   const [recordSeconds, setRecordSeconds] = useState(0);
   const [recordedAudio, setRecordedAudio] = useState(null);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const [bannerError, setBannerError] = useState(null);
   const voiceRecorderRef = useRef(null);
   const recordingTimerRef = useRef(null);
   const audioPlayerRef = useRef(null);
+
+  const showBannerError = (msg) => {
+    setBannerError(msg);
+    setTimeout(() => setBannerError(null), 3500);
+  };
   
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -140,7 +146,7 @@ export default function LocketCamera({ isOpen, onClose, onSubmit, partnerName = 
         setCapturedPhoto(compressed.dataUrl);
         stopCamera();
       } catch (err) {
-        alert('Không thể tải ảnh này');
+        showBannerError('Không thể xử lý ảnh này. Vui lòng thử chọn ảnh khác!');
       }
     }
   };
@@ -165,7 +171,7 @@ export default function LocketCamera({ isOpen, onClose, onSubmit, partnerName = 
       }, 200);
     } catch (err) {
       console.warn('Microphone error:', err);
-      alert('Không thể mở micro. Vui lòng cấp quyền truy cập micro trên trình duyệt!');
+      showBannerError('Không thể mở micro. Vui lòng cấp quyền micro trên trình duyệt!');
     }
   };
 
@@ -273,6 +279,14 @@ export default function LocketCamera({ isOpen, onClose, onSubmit, partnerName = 
           <RefreshCw className="w-5 h-5 text-white" />
         </button>
       </div>
+
+      {/* Floating Error Toast */}
+      {bannerError && (
+        <div className="z-20 w-full max-w-sm mt-2 bg-rose-500/20 border border-rose-500/40 text-rose-200 text-xs px-3.5 py-2.5 rounded-2xl backdrop-blur-xl shadow-xl flex items-center gap-2 animate-bounce">
+          <span>⚠️</span>
+          <span className="font-medium">{bannerError}</span>
+        </div>
+      )}
 
       {/* Center 1:1 Square Locket Viewfinder */}
       <div className="relative w-full max-w-sm aspect-square bg-slate-950 rounded-[40px] overflow-hidden border-2 border-white/20 shadow-2xl flex items-center justify-center my-auto">

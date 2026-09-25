@@ -25,6 +25,7 @@ export default function SettingsDrawer({ isOpen, onClose, state, onSaveSettings 
   };
   const [anniversary, setAnniversary] = useState(() => formatLocalDate(state.anniversaryDate));
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [errorMsg, setErrorMsg] = useState(null);
 
   // Firebase Config State
   const [showCloudConfig, setShowCloudConfig] = useState(false);
@@ -46,7 +47,8 @@ export default function SettingsDrawer({ isOpen, onClose, state, onSaveSettings 
       if (target === 'a') setAvatarA(result.dataUrl);
       else setAvatarB(result.dataUrl);
     } catch (e) {
-      alert('Không thể xử lý ảnh này!');
+      setErrorMsg('Không thể xử lý ảnh này!');
+      setTimeout(() => setErrorMsg(null), 3000);
     }
   };
 
@@ -59,7 +61,8 @@ export default function SettingsDrawer({ isOpen, onClose, state, onSaveSettings 
         const parsed = JSON.parse(rawConfigInput);
         saveFirebaseConfig(parsed);
       } catch (e) {
-        alert('Cấu hình Firebase phải là định dạng JSON hợp lệ!');
+        setErrorMsg('Cấu hình Firebase phải là định dạng JSON hợp lệ!');
+        setTimeout(() => setErrorMsg(null), 3500);
         return;
       }
     }
@@ -305,6 +308,14 @@ export default function SettingsDrawer({ isOpen, onClose, state, onSaveSettings 
             </div>
           )}
         </div>
+
+        {/* Error notification banner if any */}
+        {errorMsg && (
+          <div className="bg-rose-500/15 border border-rose-500/40 text-rose-300 text-xs px-3.5 py-2.5 rounded-xl flex items-center gap-2 animate-pulse">
+            <span>⚠️</span>
+            <span className="font-medium">{errorMsg}</span>
+          </div>
+        )}
 
         {/* Save Button */}
         <button
