@@ -15,7 +15,10 @@ body {
   color: #f8fafc;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Be Vietnam Pro', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
   overscroll-behavior-y: none;
 }
 

@@ -13,11 +13,16 @@ export default function SettingsDrawer({ isOpen, onClose, state, onSaveSettings 
   const [pinA, setPinA] = useState(getCustomPin('a'));
   const [pinB, setPinB] = useState(getCustomPin('b'));
   
-  // Format anniversary date to YYYY-MM-DD for date input
-  const initialDateStr = state.anniversaryDate
-    ? new Date(state.anniversaryDate).toISOString().split('T')[0]
-    : '2024-04-20';
-  const [anniversary, setAnniversary] = useState(initialDateStr);
+  // Format anniversary date to YYYY-MM-DD theo giờ địa phương (tránh lệch ngày do UTC)
+  const formatLocalDate = (timestamp) => {
+    if (!timestamp) return '2024-04-20';
+    const d = new Date(timestamp);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  const [anniversary, setAnniversary] = useState(() => formatLocalDate(state.anniversaryDate));
   const [savedSuccess, setSavedSuccess] = useState(false);
 
   // Firebase Config State
@@ -72,7 +77,11 @@ export default function SettingsDrawer({ isOpen, onClose, state, onSaveSettings 
         name: nameB.trim() || 'Người Yêu',
         avatar: avatarB
       },
-      anniversaryDate: new Date(anniversary).getTime()
+      anniversaryDate: (() => {
+        if (!anniversary) return Date.now();
+        const [y, m, d] = anniversary.split('-').map(Number);
+        return new Date(y, m - 1, d, 12, 0, 0).getTime();
+      })()
     };
 
     onSaveSettings(updated);

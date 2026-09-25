@@ -5,26 +5,29 @@ class SoundService {
   }
 
   init() {
-    if (!this.ctx) {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      if (AudioCtx) {
-        this.ctx = new AudioCtx();
+    try {
+      if (!this.ctx) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) {
+          this.ctx = new AudioCtx();
+        }
       }
-    }
-    if (this.ctx && this.ctx.state === 'suspended') {
-      this.ctx.resume();
-    }
+      if (this.ctx && this.ctx.state === 'suspended') {
+        this.ctx.resume().catch(() => {});
+      }
+    } catch (e) {}
   }
 
   play(type) {
-    this.init();
-    if (!this.ctx) return;
+    try {
+      this.init();
+      if (!this.ctx || this.ctx.state === 'suspended') return;
 
-    const now = this.ctx.currentTime;
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-    osc.connect(gain);
-    gain.connect(this.ctx.destination);
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
 
     if (type === 'kiss') {
       osc.type = 'sine';
@@ -58,7 +61,8 @@ class SoundService {
       osc.start(now);
       osc.stop(now + 0.08);
     }
-  }
+  } catch (e) {}
+}
 }
 
 export const sound = new SoundService();

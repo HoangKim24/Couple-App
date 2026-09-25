@@ -65,6 +65,8 @@ export default function PasscodeGate({ onUnlock }) {
       <form onSubmit={handleSubmit} className="w-full max-w-[260px] flex flex-col gap-3.5">
         <input
           type="password"
+          inputMode="numeric"
+          pattern="[0-9]*"
           maxLength={8}
           autoFocus
           value={code}

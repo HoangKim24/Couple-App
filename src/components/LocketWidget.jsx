@@ -2,10 +2,24 @@ import React from 'react';
 import { Camera, Sparkles, Heart } from 'lucide-react';
 import { sound } from '../services/audio';
 
+function formatLocketTime(timestamp) {
+  if (!timestamp) return 'Vừa xong';
+  const now = Date.now();
+  const diffSec = Math.floor((now - Number(timestamp)) / 1000);
+  if (diffSec < 60) return 'Vừa xong';
+  if (diffSec < 3600) return `${Math.floor(diffSec / 60)} phút trước`;
+  if (diffSec < 86400) return `${Math.floor(diffSec / 3600)} giờ trước`;
+  const diffDays = Math.floor(diffSec / 86400);
+  if (diffDays === 1) return 'Hôm qua';
+  if (diffDays < 7) return `${diffDays} ngày trước`;
+  return new Date(timestamp).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+}
+
 export default function LocketWidget({ locket, myRole, onReaction, onOpenCapture, onOpenHistory }) {
   const isSenderMe = locket && locket.senderId === myRole;
 
-  const handleQuickReact = (emoji) => {
+  const handleQuickReact = (emoji, e) => {
+    if (e) e.stopPropagation();
     sound.play('heart');
     if (onReaction) onReaction(emoji);
   };
@@ -60,7 +74,7 @@ export default function LocketWidget({ locket, myRole, onReaction, onOpenCapture
           {isSenderMe ? 'Bạn vừa gửi' : 'Người yêu vừa gửi'}
         </span>
         <span className="px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-md text-slate-300 text-[10px]">
-          {locket.timestamp ? new Date(locket.timestamp).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : 'Vừa xong'}
+          {formatLocketTime(locket.timestamp)}
         </span>
       </div>
 
@@ -75,19 +89,19 @@ export default function LocketWidget({ locket, myRole, onReaction, onOpenCapture
         {/* Quick Reactions */}
         <div className="flex items-center gap-2 pt-1">
           <button
-            onClick={() => handleQuickReact('❤️')}
+            onClick={(e) => handleQuickReact('❤️', e)}
             className="px-3 py-1 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-md text-xs transition active:scale-90 flex items-center gap-1"
           >
             <span>❤️</span> <span className="text-[10px] text-white">Yêu</span>
           </button>
           <button
-            onClick={() => handleQuickReact('💋')}
+            onClick={(e) => handleQuickReact('💋', e)}
             className="px-3 py-1 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-md text-xs transition active:scale-90 flex items-center gap-1"
           >
             <span>💋</span> <span className="text-[10px] text-white">Hôn</span>
           </button>
           <button
-            onClick={() => handleQuickReact('🥰')}
+            onClick={(e) => handleQuickReact('🥰', e)}
             className="px-3 py-1 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-md text-xs transition active:scale-90 flex items-center gap-1"
           >
             <span>🥰</span> <span className="text-[10px] text-white">Thích</span>

@@ -8,8 +8,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
-        display: ['"Outfit"', 'sans-serif'],
+        sans: ['"Be Vietnam Pro"', '"Plus Jakarta Sans"', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+        display: ['"Lexend"', '"Be Vietnam Pro"', '"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
       },
       colors: {
         love: {

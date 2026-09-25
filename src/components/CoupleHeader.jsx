@@ -6,9 +6,19 @@ export default function CoupleHeader({ myRole, userA, userB, anniversaryDate, on
 
   useEffect(() => {
     const calc = () => {
-      const targetDate = anniversaryDate ? new Date(anniversaryDate) : new Date();
-      const diff = Math.floor(Math.abs(new Date() - targetDate) / (1000 * 60 * 60 * 24));
-      setDays(diff);
+      if (!anniversaryDate) {
+        setDays(1);
+        return;
+      }
+      const start = new Date(anniversaryDate);
+      const now = new Date();
+      // Chuẩn hóa về 00:00:00 giờ địa phương để tránh lỗi chênh lệch múi giờ / giờ trong ngày
+      const startMidnight = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+      const nowMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const diffMs = nowMidnight.getTime() - startMidnight.getTime();
+      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      // Ngày đầu tiên yêu nhau là Ngày 1
+      setDays(diffDays >= 0 ? diffDays + 1 : 0);
     };
     calc();
     const timer = setInterval(calc, 60000);

@@ -62,7 +62,7 @@ export default function LocketCamera({ isOpen, onClose, onSubmit, partnerName = 
       setStream(mediaStream);
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
-        videoRef.current.play();
+        videoRef.current.play().catch((err) => console.log('Video play caught:', err));
       }
     } catch (err) {
       console.warn('Lỗi mở camera WebRTC:', err);
@@ -86,13 +86,16 @@ export default function LocketCamera({ isOpen, onClose, onSubmit, partnerName = 
   // Bấm nút chụp ảnh (Shutter) chuẩn Locket
   const handleShutter = () => {
     if (!videoRef.current) return;
+    const video = videoRef.current;
+    if (video.videoWidth === 0 || video.videoHeight === 0) {
+      return;
+    }
     sound.play('tap');
     
     // Hiệu ứng chớp flash màn hình
     setIsFlashActive(true);
     setTimeout(() => setIsFlashActive(false), 160);
 
-    const video = videoRef.current;
     const canvas = canvasRef.current || document.createElement('canvas');
     const size = Math.min(video.videoWidth || 800, video.videoHeight || 800);
     const outSize = 1080;
