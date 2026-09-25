@@ -48,19 +48,17 @@ export async function compressImage(file, maxWidth = 1200, maxHeight = 1200, qua
         ctx.imageSmoothingQuality = 'high';
         ctx.drawImage(img, 0, 0, width, height);
 
-        // Xuất định dạng WebP nếu hỗ trợ, fallback sang JPEG
-        let dataUrl;
-        try {
-          dataUrl = canvas.toDataURL('image/webp', quality);
-          if (!dataUrl.startsWith('data:image/webp')) {
-            dataUrl = canvas.toDataURL('image/jpeg', quality);
-          }
-        } catch (e) {
-          dataUrl = canvas.toDataURL('image/jpeg', quality);
-        }
+        // Xuất định dạng JPEG với kích thước được kiểm soát chặt chẽ < 250KB
+        let currentQuality = quality;
+        let dataUrl = canvas.toDataURL('image/jpeg', currentQuality);
+        let approximateSizeKB = Math.round((dataUrl.length * 3) / 4 / 1024);
 
-        // Tính dung lượng sau nén
-        const approximateSizeKB = Math.round((dataUrl.length * 3) / 4 / 1024);
+        // Nếu ảnh vẫn > 250KB, tự động giảm nhẹ chất lượng để đảm bảo không chạm trần Firestore
+        while (approximateSizeKB > 250 && currentQuality > 0.4) {
+          currentQuality -= 0.08;
+          dataUrl = canvas.toDataURL('image/jpeg', currentQuality);
+          approximateSizeKB = Math.round((dataUrl.length * 3) / 4 / 1024);
+        }
 
         resolve({
           dataUrl,
@@ -75,4 +73,21 @@ export async function compressImage(file, maxWidth = 1200, maxHeight = 1200, qua
 
     reader.readAsDataURL(file);
   });
+}
+
+/**
+ * Nén trực tiếp từ thẻ Canvas (dùng cho Locket Camera chụp trực tiếp)
+ */
+export function compressCanvasToDataUrl(canvas, maxKB = 250) {
+  let quality = 0.82;
+  let dataUrl = canvas.toDataURL('image/jpeg', quality);
+  let sizeKB = Math.round((dataUrl.length * 3) / 4 / 1024);
+
+  while (sizeKB > maxKB && quality > 0.4) {
+    quality -= 0.08;
+    dataUrl = canvas.toDataURL('image/jpeg', quality);
+    sizeKB = Math.round((dataUrl.length * 3) / 4 / 1024);
+  }
+
+  return { dataUrl, sizeKB };
 }

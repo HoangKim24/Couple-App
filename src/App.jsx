@@ -10,7 +10,7 @@ import ScriptableModal from './components/ScriptableModal';
 import SettingsDrawer from './components/SettingsDrawer';
 import { getLocalState, saveLocalState } from './services/storage';
 import { sound } from './services/audio';
-import { publishLiveEvent, subscribeLiveEvents } from './services/firebase';
+import { publishLiveEvent, subscribeLiveEvents, getRecentPhotosFromCloud } from './services/firebase';
 import { savePhotoToDB, getAllPhotosFromDB, deletePhotoFromDB } from './services/db';
 
 export default function App() {
@@ -23,20 +23,55 @@ export default function App() {
   const [toast, setToast] = useState(null);
   const [particles, setParticles] = useState([]);
   const [isShaking, setIsShaking] = useState(false);
+  const [inAppDismissed, setInAppDismissed] = useState(false);
   const toastTimeoutRef = useRef(null);
+
+  const isInApp = typeof window !== 'undefined' && /FBAN|FBAV|Instagram|Line|KAKAOTALK|Zalo|MicroMessenger|Snapchat/i.test(navigator.userAgent || '');
 
   // Save state to localStorage
   useEffect(() => {
     saveLocalState(state);
   }, [state]);
 
-  // Load photos from IndexedDB on startup
+  // Load photos from IndexedDB on startup, then reconcile with Cloud Firestore
   useEffect(() => {
-    getAllPhotosFromDB().then((photos) => {
-      if (photos && photos.length > 0) {
-        setHistoryPhotos(photos);
+    let isMounted = true;
+    async function loadAndSyncPhotos() {
+      try {
+        const localPhotos = await getAllPhotosFromDB();
+        if (isMounted && localPhotos && localPhotos.length > 0) {
+          setHistoryPhotos(localPhotos);
+        }
+
+        // Đồng bộ 2 chiều từ Cloud Firestore (kể cả khi tắt máy cả tuần)
+        const cloudPhotos = await getRecentPhotosFromCloud(60);
+        if (isMounted && cloudPhotos && cloudPhotos.length > 0) {
+          const localMap = new Map((localPhotos || []).map((p) => [String(p.id || p.timestamp), p]));
+          let hasNew = false;
+          for (const cp of cloudPhotos) {
+            const key = String(cp.id || cp.timestamp);
+            if (!localMap.has(key)) {
+              await savePhotoToDB(cp).catch(() => {});
+              localMap.set(key, cp);
+              hasNew = true;
+            }
+          }
+          if (hasNew && isMounted) {
+            const merged = Array.from(localMap.values()).sort(
+              (a, b) => (Number(b.timestamp) || 0) - (Number(a.timestamp) || 0)
+            );
+            setHistoryPhotos(merged);
+          }
+        }
+      } catch (e) {
+        console.warn('Sync photos error:', e);
       }
-    }).catch((e) => console.log('IndexedDB load error', e));
+    }
+
+    loadAndSyncPhotos();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Subscribe to real-time events from partner
@@ -82,6 +117,16 @@ export default function App() {
         sound.play('heart');
         spawnHearts();
         showToast(`Người yêu vừa thả ${event.emoji} lên ảnh của bạn!`);
+      } else if (event.type === 'DELETE_PHOTO') {
+        const photoId = String(event.id);
+        deletePhotoFromDB(photoId).catch(() => {});
+        setHistoryPhotos((prev) => prev.filter((p) => String(p.id) !== photoId && String(p.timestamp) !== photoId));
+        setState((prev) => {
+          if (String(prev.latestLocket?.id) === photoId || String(prev.latestLocket?.timestamp) === photoId) {
+            return { ...prev, latestLocket: null };
+          }
+          return prev;
+        });
       }
     });
 
@@ -204,11 +249,17 @@ export default function App() {
 
   const handleDeleteHistoryPhoto = async (id) => {
     try {
-      await deletePhotoFromDB(id);
-      setHistoryPhotos((prev) => prev.filter((p) => p.id !== id));
-      if (state.latestLocket?.id === id || state.latestLocket?.timestamp === id) {
+      const photoId = String(id);
+      await deletePhotoFromDB(photoId);
+      setHistoryPhotos((prev) => prev.filter((p) => String(p.id) !== photoId && String(p.timestamp) !== photoId));
+      if (String(state.latestLocket?.id) === photoId || String(state.latestLocket?.timestamp) === photoId) {
         setState((prev) => ({ ...prev, latestLocket: null }));
       }
+      // Đồng bộ xóa sang máy đối phương & Cloud Firestore
+      publishLiveEvent({
+        type: 'DELETE_PHOTO',
+        id: photoId
+      });
       showToast('Đã xóa khoảnh khắc');
     } catch (e) {
       console.error(e);
@@ -243,6 +294,14 @@ export default function App() {
   return (
     <div className={`w-full max-w-md h-full flex flex-col justify-between relative px-4 py-2 overflow-hidden mx-auto ${isShaking ? 'animate-bounce' : ''}`}>
       
+      {/* Cảnh báo In-App Browser (Zalo / Messenger / FB) */}
+      {isInApp && !inAppDismissed && (
+        <div className="w-full bg-amber-500/20 border border-amber-500/40 text-amber-200 text-[11px] px-3 py-2 rounded-2xl flex items-center justify-between gap-2 mb-1 shrink-0 backdrop-blur-md">
+          <span>⚠️ Đang mở trong app chat. Bấm <b>•••</b> chọn <b>"Mở bằng Trình duyệt"</b> để camera hoạt động tốt nhất!</span>
+          <button onClick={() => setInAppDismissed(true)} className="p-1 text-amber-300 hover:text-white shrink-0 font-bold">✕</button>
+        </div>
+      )}
+
       {/* Top Header with Dynamic Real Anniversary Date & Settings Trigger */}
       <CoupleHeader
         myRole={state.myRole}
@@ -297,7 +356,7 @@ export default function App() {
         isOpen={isCameraOpen}
         onClose={() => setIsCameraOpen(false)}
         onSubmit={handleLocketSubmit}
-        partnerName={state.myRole === 'a' ? (state.userB?.name || 'Em') : (state.userA?.name || 'Anh')}
+        partnerName={state.myRole === 'a' ? (state.userB?.name || 'Người Yêu') : (state.userA?.name || 'Bạn')}
       />
 
       <ScriptableModal

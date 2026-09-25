@@ -4,6 +4,22 @@ export const PASSCODE_2 = "01";
 export const PASSCODE_BOY = PASSCODE_1;
 export const PASSCODE_GIRL = PASSCODE_2;
 
+export function getCustomPin(role) {
+  try {
+    const custom = localStorage.getItem(`couple_custom_pin_${role}`);
+    if (custom) return custom;
+  } catch (e) {}
+  return role === 'a' ? '00' : '01';
+}
+
+export function saveCustomPin(role, pin) {
+  if (pin && pin.trim().length >= 2) {
+    localStorage.setItem(`couple_custom_pin_${role}`, pin.trim());
+  } else {
+    localStorage.removeItem(`couple_custom_pin_${role}`);
+  }
+}
+
 // Default SVG Avatars
 export const DEFAULT_AVATAR_A = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%2338bdf8'/%3E%3Ctext x='50' y='60' font-size='38' text-anchor='middle' fill='white' font-family='sans-serif'%3E%E2%9C%A8%3C/text%3E%3C/svg%3E";
 export const DEFAULT_AVATAR_B = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23f43f5e'/%3E%3Ctext x='50' y='60' font-size='38' text-anchor='middle' fill='white' font-family='sans-serif'%3E%E2%9D%A4%EF%B8%8F%3C/text%3E%3C/svg%3E";

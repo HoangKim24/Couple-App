@@ -1,5 +1,16 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getFirestore, doc, setDoc, onSnapshot } from 'firebase/firestore';
+import { 
+  getFirestore, 
+  doc, 
+  setDoc, 
+  onSnapshot, 
+  collection, 
+  getDocs, 
+  query, 
+  orderBy, 
+  limit, 
+  deleteDoc 
+} from 'firebase/firestore';
 
 /**
  * FIREBASE REALTIME SYNC SERVICE
@@ -41,7 +52,7 @@ export function saveFirebaseConfig(config) {
 
 let firestoreInstance = null;
 
-function getDb() {
+export function getDb() {
   if (firestoreInstance) return firestoreInstance;
   const config = getFirebaseConfig();
   if (config && config.projectId) {
@@ -54,6 +65,63 @@ function getDb() {
     }
   }
   return null;
+}
+
+/**
+ * Lưu 1 bức ảnh vào subcollection 'photos' trên Cloud Firestore
+ * Đảm bảo dù máy kia offline cả tuần vẫn không bao giờ mất ảnh
+ */
+export async function savePhotoToCloud(photo) {
+  const db = getDb();
+  if (!db) return;
+  try {
+    const photoId = String(photo.id || photo.timestamp || Date.now());
+    const photoRef = doc(db, 'couples', '00_01', 'photos', photoId);
+    await setDoc(photoRef, {
+      id: photoId,
+      photoUrl: photo.photoUrl,
+      caption: photo.caption || '',
+      senderId: photo.senderId,
+      timestamp: photo.timestamp || Date.now()
+    });
+  } catch (err) {
+    console.error('Lỗi lưu ảnh lên Cloud photos subcollection:', err);
+  }
+}
+
+/**
+ * Tải danh sách ảnh kỷ niệm từ Cloud về máy
+ */
+export async function getRecentPhotosFromCloud(limitCount = 60) {
+  const db = getDb();
+  if (!db) return [];
+  try {
+    const photosCol = collection(db, 'couples', '00_01', 'photos');
+    const q = query(photosCol, orderBy('timestamp', 'desc'), limit(limitCount));
+    const snapshot = await getDocs(q);
+    const photos = [];
+    snapshot.forEach((doc) => {
+      photos.push(doc.data());
+    });
+    return photos;
+  } catch (err) {
+    console.warn('Lỗi đọc ảnh từ Cloud:', err);
+    return [];
+  }
+}
+
+/**
+ * Xóa ảnh khỏi Cloud Firestore
+ */
+export async function deletePhotoFromCloud(photoId) {
+  const db = getDb();
+  if (!db || !photoId) return;
+  try {
+    const photoRef = doc(db, 'couples', '00_01', 'photos', String(photoId));
+    await deleteDoc(photoRef);
+  } catch (err) {
+    console.warn('Lỗi xóa ảnh Cloud:', err);
+  }
 }
 
 /**
@@ -71,7 +139,9 @@ export async function publishLiveEvent(event) {
     try {
       const coupleRef = doc(db, 'couples', '00_01');
       if (event.type === 'LOCKET') {
+        // Lưu cả latestLocket và vào subcollection photos
         await setDoc(coupleRef, { latestLocket: event.payload, updatedAt: Date.now() }, { merge: true });
+        await savePhotoToCloud(event.payload);
       } else if (event.type === 'HABI') {
         await setDoc(coupleRef, {
           lastHabi: {
@@ -90,6 +160,8 @@ export async function publishLiveEvent(event) {
             timestamp: Date.now()
           }
         }, { merge: true });
+      } else if (event.type === 'DELETE_PHOTO') {
+        await deletePhotoFromCloud(event.id);
       }
     } catch (err) {
       console.error('Lỗi gửi dữ liệu lên Firestore:', err);

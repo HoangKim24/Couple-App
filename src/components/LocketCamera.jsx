@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { X, RefreshCw, Image as ImageIcon, Send, Sparkles, AlertCircle, RotateCcw } from 'lucide-react';
 import { sound } from '../services/audio';
-import { compressImage } from '../services/compressor';
+import { compressImage, compressCanvasToDataUrl } from '../services/compressor';
 
 export default function LocketCamera({ isOpen, onClose, onSubmit, partnerName = 'Người Yêu' }) {
   const [facingMode, setFacingMode] = useState('user'); // 'user' (selfie) hoặc 'environment' (sau)
@@ -10,10 +10,26 @@ export default function LocketCamera({ isOpen, onClose, onSubmit, partnerName = 
   const [caption, setCaption] = useState('');
   const [cameraError, setCameraError] = useState(null);
   const [isFlashActive, setIsFlashActive] = useState(false);
+  const [isCaptionFocused, setIsCaptionFocused] = useState(false);
+  const [viewportHeight, setViewportHeight] = useState(window.innerHeight);
   
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const fileInputRef = useRef(null);
+
+  // Theo dõi sự thay đổi chiều cao màn hình khi bàn phím ảo bật lên (Mobile VisualViewport)
+  useEffect(() => {
+    if (!window.visualViewport) return;
+    const handleResize = () => {
+      setViewportHeight(window.visualViewport.height);
+    };
+    window.visualViewport.addEventListener('resize', handleResize);
+    window.visualViewport.addEventListener('scroll', handleResize);
+    return () => {
+      window.visualViewport.removeEventListener('resize', handleResize);
+      window.visualViewport.removeEventListener('scroll', handleResize);
+    };
+  }, []);
 
   // Khởi động Camera thật khi mở modal
   useEffect(() => {
@@ -97,7 +113,7 @@ export default function LocketCamera({ isOpen, onClose, onSubmit, partnerName = 
 
     ctx.drawImage(video, startX, startY, size, size, 0, 0, outSize, outSize);
 
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.84);
+    const { dataUrl } = compressCanvasToDataUrl(canvas, 250);
     setCapturedPhoto(dataUrl);
     stopCamera();
   };
@@ -138,7 +154,10 @@ export default function LocketCamera({ isOpen, onClose, onSubmit, partnerName = 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black z-50 flex flex-col justify-between items-center select-none overflow-hidden safe-pt safe-pb p-4 sm:p-6">
+    <div
+      style={{ height: `${viewportHeight}px`, maxHeight: `${viewportHeight}px` }}
+      className="fixed inset-0 bg-black z-50 flex flex-col justify-between items-center select-none overflow-hidden safe-pt safe-pb p-4 sm:p-6 transition-all duration-200"
+    >
       
       {/* Flash overlay animation */}
       {isFlashActive && <div className="absolute inset-0 bg-white z-[80] pointer-events-none transition-opacity duration-150" />}
@@ -199,14 +218,18 @@ export default function LocketCamera({ isOpen, onClose, onSubmit, partnerName = 
         )}
 
         {/* Locket Caption Bar (Nằm đè trực tiếp lên khung chụp) */}
-        <div className="absolute bottom-4 inset-x-4 flex justify-center z-20">
+        <div className={`absolute ${isCaptionFocused ? 'bottom-2 sm:bottom-4' : 'bottom-4'} inset-x-4 flex justify-center z-20 transition-all`}>
           <input
             type="text"
             maxLength={60}
             value={caption}
+            onFocus={() => setIsCaptionFocused(true)}
+            onBlur={() => setIsCaptionFocused(false)}
             onChange={(e) => setCaption(e.target.value)}
             placeholder="Gửi một tin nhắn... 💬"
-            className="w-full bg-black/60 backdrop-blur-md text-white text-xs sm:text-sm font-medium px-4 py-2.5 rounded-full border border-white/25 text-center placeholder-white/60 focus:outline-none focus:border-amber-400 shadow-lg tracking-wide"
+            className={`w-full bg-black/70 backdrop-blur-md text-white text-xs sm:text-sm font-medium px-4 py-2.5 rounded-full border ${
+              isCaptionFocused ? 'border-amber-400 ring-2 ring-amber-400/30' : 'border-white/25'
+            } text-center placeholder-white/60 focus:outline-none shadow-xl tracking-wide transition-all`}
           />
         </div>
       </div>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { HeartHandshake, KeyRound } from 'lucide-react';
-import { PASSCODE_BOY, PASSCODE_GIRL } from '../services/storage';
+import { PASSCODE_1, PASSCODE_2, getCustomPin } from '../services/storage';
 import { sound } from '../services/audio';
 
 export default function PasscodeGate({ onUnlock }) {
@@ -9,13 +9,16 @@ export default function PasscodeGate({ onUnlock }) {
 
   const checkCode = (val) => {
     const clean = val.trim();
-    if (clean === PASSCODE_BOY) {
+    const pinA = getCustomPin('a');
+    const pinB = getCustomPin('b');
+
+    if (clean === pinA || clean === PASSCODE_1) {
       sound.play('heart');
-      onUnlock('a'); // Con Trai
+      onUnlock('a');
       return true;
-    } else if (clean === PASSCODE_GIRL) {
+    } else if (clean === pinB || clean === PASSCODE_2) {
       sound.play('heart');
-      onUnlock('b'); // Con Gái
+      onUnlock('b');
       return true;
     }
     return false;
@@ -24,9 +27,12 @@ export default function PasscodeGate({ onUnlock }) {
   const handleInputChange = (e) => {
     const val = e.target.value;
     setCode(val);
-    if (val.length >= 2) {
+    const pinA = getCustomPin('a');
+    const pinB = getCustomPin('b');
+    const expectedLen = Math.max(pinA.length, pinB.length, 2);
+
+    if (val.length >= expectedLen) {
       if (!checkCode(val)) {
-        // If 2 characters entered and doesn't match either 00 or 01
         sound.play('pout');
         setError(true);
         setTimeout(() => setError(false), 800);
@@ -59,11 +65,11 @@ export default function PasscodeGate({ onUnlock }) {
       <form onSubmit={handleSubmit} className="w-full max-w-[260px] flex flex-col gap-3.5">
         <input
           type="password"
-          maxLength={2}
+          maxLength={8}
           autoFocus
           value={code}
           onChange={handleInputChange}
-          placeholder="••"
+          placeholder="••••"
           className={`w-full bg-slate-900 border ${
             error ? 'border-red-500 animate-bounce' : 'border-slate-800'
           } text-center tracking-widest text-3xl font-mono text-love-400 rounded-2xl py-3 focus:outline-none focus:border-love-500 shadow-inner`}

@@ -1,14 +1,17 @@
 import React, { useState, useRef } from 'react';
-import { X, User, Calendar, Save, Upload, Check, Cloud, Database, ExternalLink } from 'lucide-react';
+import { X, User, Calendar, Save, Upload, Check, Cloud, Database, ExternalLink, KeyRound } from 'lucide-react';
 import { sound } from '../services/audio';
 import { compressImage } from '../services/compressor';
 import { getFirebaseConfig, saveFirebaseConfig } from '../services/firebase';
+import { getCustomPin, saveCustomPin } from '../services/storage';
 
 export default function SettingsDrawer({ isOpen, onClose, state, onSaveSettings }) {
-  const [nameA, setNameA] = useState(state.userA?.name || 'Anh');
+  const [nameA, setNameA] = useState(state.userA?.name || 'Bạn');
   const [avatarA, setAvatarA] = useState(state.userA?.avatar || '');
-  const [nameB, setNameB] = useState(state.userB?.name || 'Em');
+  const [nameB, setNameB] = useState(state.userB?.name || 'Người Yêu');
   const [avatarB, setAvatarB] = useState(state.userB?.avatar || '');
+  const [pinA, setPinA] = useState(getCustomPin('a'));
+  const [pinB, setPinB] = useState(getCustomPin('b'));
   
   // Format anniversary date to YYYY-MM-DD for date input
   const initialDateStr = state.anniversaryDate
@@ -55,15 +58,18 @@ export default function SettingsDrawer({ isOpen, onClose, state, onSaveSettings 
       }
     }
 
+    saveCustomPin('a', pinA);
+    saveCustomPin('b', pinB);
+
     const updated = {
       userA: {
         ...state.userA,
-        name: nameA.trim() || 'Anh',
+        name: nameA.trim() || 'Bạn',
         avatar: avatarA
       },
       userB: {
         ...state.userB,
-        name: nameB.trim() || 'Em',
+        name: nameB.trim() || 'Người Yêu',
         avatar: avatarB
       },
       anniversaryDate: new Date(anniversary).getTime()
@@ -182,6 +188,39 @@ export default function SettingsDrawer({ isOpen, onClose, state, onSaveSettings 
               onChange={(e) => handleAvatarUpload(e.target.files?.[0], 'b')}
             />
           </div>
+        </div>
+
+        {/* Đổi Mã PIN Mở Khóa Riêng Tư */}
+        <div className="bg-slate-950 p-3 rounded-2xl border border-slate-800 flex flex-col gap-2">
+          <span className="text-[11px] font-bold text-slate-300 flex items-center gap-1.5">
+            <KeyRound className="w-3.5 h-3.5 text-love-400" />
+            Mã PIN Mở Khóa Riêng Tư
+          </span>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-[10px] text-sky-400 font-semibold block mb-1">Mã Máy 1</label>
+              <input
+                type="text"
+                maxLength={6}
+                value={pinA}
+                onChange={(e) => setPinA(e.target.value)}
+                placeholder="Mặc định: 00"
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-white font-mono focus:outline-none focus:border-sky-400"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] text-love-400 font-semibold block mb-1">Mã Máy 2</label>
+              <input
+                type="text"
+                maxLength={6}
+                value={pinB}
+                onChange={(e) => setPinB(e.target.value)}
+                placeholder="Mặc định: 01"
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-white font-mono focus:outline-none focus:border-love-400"
+              />
+            </div>
+          </div>
+          <span className="text-[9px] text-slate-500">Mã từ 2-6 ký tự (Ví dụ: 00, 01, 1234, ngày sinh).</span>
         </div>
 
         {/* Cloud Firebase Realtime Sync Config */}
