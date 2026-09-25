@@ -12,6 +12,7 @@ import { getLocalState, saveLocalState } from './services/storage';
 import { sound } from './services/audio';
 import { publishLiveEvent, subscribeLiveEvents, getRecentPhotosFromCloud } from './services/firebase';
 import { savePhotoToDB, getAllPhotosFromDB, deletePhotoFromDB } from './services/db';
+import { initBatteryMonitoring } from './services/battery';
 
 export default function App() {
   const [state, setState] = useState(getLocalState);
@@ -24,9 +25,27 @@ export default function App() {
   const [particles, setParticles] = useState([]);
   const [isShaking, setIsShaking] = useState(false);
   const [inAppDismissed, setInAppDismissed] = useState(false);
+  const [myBattery, setMyBattery] = useState(null);
+  const [partnerBattery, setPartnerBattery] = useState(null);
   const toastTimeoutRef = useRef(null);
 
   const isInApp = typeof window !== 'undefined' && /FBAN|FBAV|Instagram|Line|KAKAOTALK|Zalo|MicroMessenger|Snapchat/i.test(navigator.userAgent || '');
+
+  // Lắng nghe và đồng bộ mức pin thiết bị theo thời gian thực
+  useEffect(() => {
+    let cleanup = () => {};
+    initBatteryMonitoring((bat) => {
+      setMyBattery(bat);
+      publishLiveEvent({
+        type: 'BATTERY',
+        from: state.myRole,
+        battery: bat
+      });
+    }).then((fn) => {
+      if (fn) cleanup = fn;
+    });
+    return () => cleanup();
+  }, [state.myRole]);
 
   // Save state to localStorage
   useEffect(() => {
@@ -127,11 +146,16 @@ export default function App() {
           }
           return prev;
         });
+      } else if (event.type === 'BATTERY') {
+        const partnerRole = state.myRole === 'a' ? 'b' : 'a';
+        if (event.battery && event.battery[partnerRole]) {
+          setPartnerBattery(event.battery[partnerRole]);
+        }
       }
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [state.myRole]);
 
   const showToast = (message) => {
     if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
@@ -148,10 +172,12 @@ export default function App() {
     showToast('Mở khóa thành công! Chào mừng bạn 💕');
   };
 
-  const handleLocketSubmit = async ({ photoUrl, caption }) => {
+  const handleLocketSubmit = async ({ photoUrl, caption, audioUrl, audioDuration }) => {
     const newLocket = {
       photoUrl,
       caption,
+      audioUrl: audioUrl || null,
+      audioDuration: audioDuration || null,
       senderId: state.myRole,
       timestamp: Date.now()
     };
@@ -302,12 +328,14 @@ export default function App() {
         </div>
       )}
 
-      {/* Top Header with Dynamic Real Anniversary Date & Settings Trigger */}
+      {/* Top Header with Dynamic Real Anniversary Date & Battery Sync */}
       <CoupleHeader
         myRole={state.myRole}
         userA={state.userA}
         userB={state.userB}
         anniversaryDate={state.anniversaryDate}
+        myBattery={myBattery}
+        partnerBattery={partnerBattery}
         onOpenSettings={() => setIsSettingsOpen(true)}
       />
 

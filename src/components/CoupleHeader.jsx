@@ -1,7 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, Settings } from 'lucide-react';
+import { Heart, Settings, Battery, BatteryCharging, BatteryWarning, Zap } from 'lucide-react';
 
-export default function CoupleHeader({ myRole, userA, userB, anniversaryDate, onOpenSettings }) {
+export default function CoupleHeader({
+  myRole,
+  userA,
+  userB,
+  anniversaryDate,
+  myBattery,
+  partnerBattery,
+  onOpenSettings
+}) {
   const [days, setDays] = useState(0);
 
   useEffect(() => {
@@ -30,7 +38,7 @@ export default function CoupleHeader({ myRole, userA, userB, anniversaryDate, on
   const partner = isMeA ? userB : userA;
 
   return (
-    <header className="w-full bg-slate-900/90 border border-slate-800/90 rounded-2xl p-3 flex items-center justify-between shadow-md shrink-0 select-none">
+    <header className="w-full bg-slate-900/90 border border-slate-800/90 rounded-2xl p-2.5 sm:p-3 flex items-center justify-between shadow-md shrink-0 select-none">
       {/* My Profile */}
       <div className="flex items-center gap-2">
         <div className="relative cursor-pointer" onClick={onOpenSettings} title="Cài đặt">
@@ -43,7 +51,19 @@ export default function CoupleHeader({ myRole, userA, userB, anniversaryDate, on
         </div>
         <div>
           <span className="text-xs font-bold text-white block leading-tight">{me?.name || 'Bạn'}</span>
-          <span className="text-[10px] text-slate-400 block truncate max-w-[70px]">{me?.mood || 'Online'}</span>
+          <div className="flex items-center gap-1.5 mt-0.5">
+            <span className="text-[10px] text-slate-400 block truncate max-w-[65px]">{me?.mood || 'Online'}</span>
+            {myBattery && (
+              <span className="inline-flex items-center gap-0.5 text-[9px] font-semibold text-slate-400">
+                {myBattery.charging ? (
+                  <Zap className="w-2.5 h-2.5 text-amber-400 fill-amber-400" />
+                ) : (
+                  <Battery className="w-2.5 h-2.5 text-slate-400" />
+                )}
+                <span>{myBattery.level}%</span>
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
@@ -51,7 +71,7 @@ export default function CoupleHeader({ myRole, userA, userB, anniversaryDate, on
       <button
         onClick={onOpenSettings}
         title="Chạm để cài đặt ngày yêu và thông tin"
-        className="flex flex-col items-center hover:scale-105 active:scale-95 transition"
+        className="flex flex-col items-center hover:scale-105 active:scale-95 transition px-2"
       >
         <div className="flex items-center gap-1 text-love-500 font-extrabold text-sm font-display">
           <Heart className="w-3.5 h-3.5 fill-love-500 animate-heart-beat" />
@@ -64,13 +84,36 @@ export default function CoupleHeader({ myRole, userA, userB, anniversaryDate, on
         </span>
       </button>
 
-      {/* Partner Profile */}
+      {/* Partner Profile with Live % Battery Indicator */}
       <div className="flex items-center gap-2 text-right">
         <div>
           <span className="text-xs font-bold text-white block leading-tight">{partner?.name || 'Người Yêu'}</span>
-          <span className={`text-[10px] ${isMeA ? 'text-love-400' : 'text-sky-400'} font-semibold block truncate max-w-[70px]`}>
-            {partner?.mood || 'Nhớ bạn'}
-          </span>
+          <div className="flex items-center justify-end gap-1.5 mt-0.5">
+            {partnerBattery && (
+              <span
+                className={`inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full border ${
+                  partnerBattery.charging
+                    ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                    : partnerBattery.level <= 20
+                    ? 'bg-rose-500/20 text-rose-300 border-rose-500/30 animate-pulse'
+                    : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                }`}
+                title={partnerBattery.charging ? 'Đang cắm sạc pin ⚡' : `Mức pin: ${partnerBattery.level}%`}
+              >
+                {partnerBattery.charging ? (
+                  <Zap className="w-2.5 h-2.5 text-amber-400 fill-amber-400" />
+                ) : partnerBattery.level <= 20 ? (
+                  <BatteryWarning className="w-2.5 h-2.5 text-rose-400" />
+                ) : (
+                  <Battery className="w-2.5 h-2.5 text-emerald-400" />
+                )}
+                <span>{partnerBattery.level}%</span>
+              </span>
+            )}
+            <span className={`text-[10px] ${isMeA ? 'text-love-400' : 'text-sky-400'} font-semibold block truncate max-w-[65px]`}>
+              {partner?.mood || 'Nhớ bạn'}
+            </span>
+          </div>
         </div>
         <div className="relative cursor-pointer" onClick={onOpenSettings} title="Cài đặt">
           <img

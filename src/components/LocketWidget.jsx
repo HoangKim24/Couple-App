@@ -1,5 +1,5 @@
-import React from 'react';
-import { Camera, Sparkles, Heart } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Camera, Sparkles, Heart, Play, Square, Volume2 } from 'lucide-react';
 import { sound } from '../services/audio';
 
 function formatLocketTime(timestamp) {
@@ -16,7 +16,25 @@ function formatLocketTime(timestamp) {
 }
 
 export default function LocketWidget({ locket, myRole, onReaction, onOpenCapture, onOpenHistory }) {
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const audioRef = useRef(null);
   const isSenderMe = locket && locket.senderId === myRole;
+
+  const togglePlayAudio = (e) => {
+    e.stopPropagation();
+    if (!locket?.audioUrl) return;
+    if (audioRef.current) {
+      if (isPlayingAudio) {
+        audioRef.current.pause();
+        setIsPlayingAudio(false);
+      } else {
+        audioRef.current.currentTime = 0;
+        audioRef.current.play().then(() => {
+          setIsPlayingAudio(true);
+        }).catch((err) => console.log('Audio play err', err));
+      }
+    }
+  };
 
   const handleQuickReact = (emoji, e) => {
     if (e) e.stopPropagation();
@@ -78,8 +96,50 @@ export default function LocketWidget({ locket, myRole, onReaction, onOpenCapture
         </span>
       </div>
 
-      {/* Caption on photo */}
+      {/* Caption & Voice Note on photo */}
       <div className="relative z-10 p-4 flex flex-col items-center gap-2">
+        {/* Voice Note Pill on Photo */}
+        {locket.audioUrl && (
+          <button
+            onClick={togglePlayAudio}
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full border backdrop-blur-md shadow-xl transition-all active:scale-95 ${
+              isPlayingAudio
+                ? 'bg-amber-400 text-slate-950 border-amber-300 ring-2 ring-amber-400/40'
+                : 'bg-black/70 text-amber-300 border-white/20 hover:bg-black/85'
+            }`}
+          >
+            {isPlayingAudio ? (
+              <Square className="w-3.5 h-3.5 fill-current" />
+            ) : (
+              <Play className="w-3.5 h-3.5 fill-current translate-x-0.5" />
+            )}
+
+            {/* Pulsing soundwaves */}
+            <div className="flex items-center gap-0.5 h-3">
+              {[40, 80, 100, 60, 90, 50, 75].map((h, i) => (
+                <span
+                  key={i}
+                  className={`w-0.5 rounded-full transition-all ${
+                    isPlayingAudio ? 'bg-slate-950 animate-pulse' : 'bg-amber-400'
+                  }`}
+                  style={{ height: `${h}%` }}
+                />
+              ))}
+            </div>
+
+            <span className="text-[11px] font-bold font-mono">
+              {isPlayingAudio ? 'Đang phát...' : locket.audioDuration ? `0:0${locket.audioDuration}s` : 'Nghe lời nhắn'}
+            </span>
+
+            <audio
+              ref={audioRef}
+              src={locket.audioUrl}
+              onEnded={() => setIsPlayingAudio(false)}
+              className="hidden"
+            />
+          </button>
+        )}
+
         {locket.caption && (
           <div className="bg-black/65 backdrop-blur-md text-white font-medium text-xs sm:text-sm px-4 py-2 rounded-2xl border border-white/20 text-center max-w-[95%] shadow-lg">
             "{locket.caption}"

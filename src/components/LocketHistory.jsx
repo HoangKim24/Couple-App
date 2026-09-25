@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { X, Grid, LayoutList, Download, Trash2, Heart, ChevronLeft, ChevronRight, Sparkles, Camera, Calendar } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { X, Grid, LayoutList, Download, Trash2, Heart, ChevronLeft, ChevronRight, Sparkles, Camera, Calendar, Play, Square, Mic } from 'lucide-react';
 import { sound } from '../services/audio';
 
 export default function LocketHistory({
@@ -12,8 +12,26 @@ export default function LocketHistory({
 }) {
   const [viewMode, setViewMode] = useState('feed'); // 'feed' | 'grid'
   const [activePhotoIndex, setActivePhotoIndex] = useState(null); // Khi mở xem từng ảnh full-screen
+  const [playingAudioId, setPlayingAudioId] = useState(null);
+  const historyAudioRef = useRef(null);
 
   if (!isOpen) return null;
+
+  const toggleHistoryAudio = (item, e) => {
+    if (e) e.stopPropagation();
+    if (!item?.audioUrl) return;
+    if (playingAudioId === (item.id || item.timestamp)) {
+      if (historyAudioRef.current) historyAudioRef.current.pause();
+      setPlayingAudioId(null);
+    } else {
+      if (historyAudioRef.current) {
+        historyAudioRef.current.src = item.audioUrl;
+        historyAudioRef.current.play().then(() => {
+          setPlayingAudioId(item.id || item.timestamp);
+        }).catch(() => {});
+      }
+    }
+  };
 
   const formatDate = (timestamp) => {
     if (!timestamp) return 'Gần đây';
@@ -158,7 +176,28 @@ export default function LocketHistory({
                     alt="Locket moment"
                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20 pointer-events-none" />
+                  {/* Voice Note Pill inside History Photo */}
+                  {item.audioUrl && (
+                    <div className="absolute top-3 left-3 z-10">
+                      <button
+                        onClick={(e) => toggleHistoryAudio(item, e)}
+                        className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-md border shadow transition active:scale-90 ${
+                          playingAudioId === (item.id || item.timestamp)
+                            ? 'bg-amber-400 text-slate-950 border-amber-300'
+                            : 'bg-black/60 text-amber-300 border-white/20 hover:bg-black/80'
+                        }`}
+                      >
+                        {playingAudioId === (item.id || item.timestamp) ? (
+                          <Square className="w-3 h-3 fill-current" />
+                        ) : (
+                          <Play className="w-3 h-3 fill-current" />
+                        )}
+                        <span className="text-[10px] font-mono">
+                          {playingAudioId === (item.id || item.timestamp) ? 'Đang phát...' : 'Lời nhắn 🎙️'}
+                        </span>
+                      </button>
+                    </div>
+                  )}
 
                   {/* Locket Caption Bar */}
                   {item.caption && (
@@ -285,6 +324,33 @@ export default function LocketHistory({
               </span>
             </div>
 
+            {/* Voice Note Pill inside Fullscreen Photo */}
+            {photos[activePhotoIndex].audioUrl && (
+              <div className="absolute top-14 left-4 z-10">
+                <button
+                  onClick={(e) => toggleHistoryAudio(photos[activePhotoIndex], e)}
+                  className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold backdrop-blur-md border shadow-lg transition active:scale-90 ${
+                    playingAudioId === (photos[activePhotoIndex].id || photos[activePhotoIndex].timestamp)
+                      ? 'bg-amber-400 text-slate-950 border-amber-300 ring-2 ring-amber-400/40'
+                      : 'bg-black/70 text-amber-300 border-white/20 hover:bg-black/90'
+                  }`}
+                >
+                  {playingAudioId === (photos[activePhotoIndex].id || photos[activePhotoIndex].timestamp) ? (
+                    <Square className="w-3.5 h-3.5 fill-current" />
+                  ) : (
+                    <Play className="w-3.5 h-3.5 fill-current translate-x-0.5" />
+                  )}
+                  <span className="font-mono text-xs">
+                    {playingAudioId === (photos[activePhotoIndex].id || photos[activePhotoIndex].timestamp)
+                      ? 'Đang phát...'
+                      : photos[activePhotoIndex].audioDuration
+                      ? `0:0${photos[activePhotoIndex].audioDuration}s`
+                      : 'Nghe lời nhắn 🎙️'}
+                  </span>
+                </button>
+              </div>
+            )}
+
             {/* Caption Bar */}
             {photos[activePhotoIndex].caption && (
               <div className="absolute bottom-4 inset-x-4 flex justify-center">
@@ -330,6 +396,8 @@ export default function LocketHistory({
         </div>
       )}
 
+      {/* Hidden audio element for history playback */}
+      <audio ref={historyAudioRef} onEnded={() => setPlayingAudioId(null)} className="hidden" />
     </div>
   );
 }

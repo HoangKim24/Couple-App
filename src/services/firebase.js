@@ -81,6 +81,8 @@ export async function savePhotoToCloud(photo) {
       id: photoId,
       photoUrl: photo.photoUrl,
       caption: photo.caption || '',
+      audioUrl: photo.audioUrl || null,
+      audioDuration: photo.audioDuration || null,
       senderId: photo.senderId,
       timestamp: photo.timestamp || Date.now()
     });
@@ -162,6 +164,16 @@ export async function publishLiveEvent(event) {
         }, { merge: true });
       } else if (event.type === 'DELETE_PHOTO') {
         await deletePhotoFromCloud(event.id);
+      } else if (event.type === 'BATTERY') {
+        await setDoc(coupleRef, {
+          battery: {
+            [event.from]: {
+              level: event.battery.level,
+              charging: event.battery.charging,
+              timestamp: Date.now()
+            }
+          }
+        }, { merge: true });
       }
     } catch (err) {
       console.error('Lỗi gửi dữ liệu lên Firestore:', err);
@@ -206,6 +218,9 @@ export function subscribeLiveEvents(callback) {
                 anniversaryDate: data.anniversaryDate
               }
             });
+          }
+          if (data.battery) {
+            callback({ type: 'BATTERY', battery: data.battery });
           }
         }
       }, (error) => {
