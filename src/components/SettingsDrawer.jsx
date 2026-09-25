@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { X, User, Calendar, Save, Upload, Check, Cloud, Database, ExternalLink, KeyRound } from 'lucide-react';
+import { X, User, Calendar, Save, Upload, Check, Cloud, Database, ExternalLink, KeyRound, Volume2, VolumeX } from 'lucide-react';
 import { sound } from '../services/audio';
 import { compressImage } from '../services/compressor';
 import { getFirebaseConfig, saveFirebaseConfig } from '../services/firebase';
@@ -12,6 +12,7 @@ export default function SettingsDrawer({ isOpen, onClose, state, onSaveSettings 
   const [avatarB, setAvatarB] = useState(state.userB?.avatar || '');
   const [pinA, setPinA] = useState(getCustomPin('a'));
   const [pinB, setPinB] = useState(getCustomPin('b'));
+  const [isMuted, setIsMuted] = useState(() => sound.isMuted());
   
   // Format anniversary date to YYYY-MM-DD theo giờ địa phương (tránh lệch ngày do UTC)
   const formatLocalDate = (timestamp) => {
@@ -230,6 +231,39 @@ export default function SettingsDrawer({ isOpen, onClose, state, onSaveSettings 
             </div>
           </div>
           <span className="text-[9px] text-slate-500">Mã từ 2-6 ký tự (Ví dụ: 00, 01, 1234, ngày sinh).</span>
+        </div>
+
+        {/* Cài đặt Âm thanh hiệu ứng */}
+        <div className="bg-slate-950 p-3 rounded-2xl border border-slate-800 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            {isMuted ? (
+              <VolumeX className="w-4 h-4 text-slate-500" />
+            ) : (
+              <Volume2 className="w-4 h-4 text-love-400" />
+            )}
+            <div>
+              <span className="text-xs font-bold text-white block">Âm Thanh Hiệu Ứng</span>
+              <span className="text-[10px] text-slate-400">Tiếng nụ hôn, thả tim, thông báo</span>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              const next = !isMuted;
+              sound.setMuted(next);
+              setIsMuted(next);
+              if (!next) sound.play('tap');
+            }}
+            className={`w-11 h-6 rounded-full transition-colors relative p-0.5 ${
+              isMuted ? 'bg-slate-800' : 'bg-love-500'
+            }`}
+          >
+            <div
+              className={`w-5 h-5 rounded-full bg-white transition-transform ${
+                isMuted ? 'translate-x-0' : 'translate-x-5'
+              }`}
+            />
+          </button>
         </div>
 
         {/* Cloud Firebase Realtime Sync Config */}

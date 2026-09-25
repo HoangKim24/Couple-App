@@ -7,7 +7,7 @@ export default function ScriptableModal({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   const handleCopy = () => {
-    fetch('./scriptable-widget.js')
+    fetch('/scriptable-widget.js')
       .then(res => res.text())
       .then(text => {
         navigator.clipboard.writeText(text);
@@ -47,7 +47,7 @@ Script.complete();`;
         </p>
 
         <a
-          href="./scriptable-widget.js"
+          href="/scriptable-widget.js"
           target="_blank"
           rel="noreferrer"
           className="w-full bg-slate-800 hover:bg-slate-700 text-love-300 text-xs font-semibold py-2.5 rounded-xl border border-slate-700 flex items-center justify-center gap-2 transition"

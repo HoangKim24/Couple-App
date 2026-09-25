@@ -2,6 +2,16 @@
 class SoundService {
   constructor() {
     this.ctx = null;
+    this.muted = localStorage.getItem('couple_sound_muted') === 'true';
+  }
+
+  setMuted(val) {
+    this.muted = !!val;
+    localStorage.setItem('couple_sound_muted', this.muted ? 'true' : 'false');
+  }
+
+  isMuted() {
+    return this.muted;
   }
 
   init() {
@@ -19,6 +29,7 @@ class SoundService {
   }
 
   play(type) {
+    if (this.muted) return;
     try {
       this.init();
       if (!this.ctx || this.ctx.state === 'suspended') return;
